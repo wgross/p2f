@@ -358,30 +358,32 @@ namespace CodeOwls.PowerShell.Provider
         private static (bool created, PSObject psObject, bool isCollection) TryMakePsObjectFromPathNode(IPathNode pathNode, IEnumerable<string> propertyNames)
         {
             var pathNodeValue = pathNode.GetNodeValue();
-            if (null == pathNodeValue)
+            if (pathNodeValue is null)
             {
                 return (false, null, false);
             }
 
-            PSObject psObject = PSObject.AsPSObject(pathNodeValue.Item);
             if (propertyNames is null || !propertyNames.Any())
             {
+                var psObject = PSObject.AsPSObject(pathNodeValue.Item);
                 psObject.Properties.Add(new PSNoteProperty(ItemModePropertyName, pathNode.ItemMode));
                 pathNodeValue.GetItemProperties(propertyNames: null).Aggregate(psObject.Properties, (psoProps, p) =>
                 {
                     psoProps.Add(p);
                     return psoProps;
                 });
+                return (true, psObject, pathNodeValue.IsCollection);
             }
             else
             {
+                var psObject = new PSObject();
                 pathNodeValue.GetItemProperties(propertyNames).Aggregate(psObject.Properties, (psoProps, p) =>
                 {
                     psoProps.Add(p);
                     return psoProps;
                 });
+                return (true, psObject, pathNodeValue.IsCollection);
             }
-            return (true, psObject, pathNodeValue.IsCollection);
         }
 
         private void WriteCmdletNotSupportedAtNodeError(string path, string cmdlet, string errorId)
