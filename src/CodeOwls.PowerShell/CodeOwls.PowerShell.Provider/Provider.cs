@@ -141,34 +141,10 @@ namespace CodeOwls.PowerShell.Provider
 
         private void GetProperty(string path, IPathNode factory, Collection<string> providerSpecificPickList)
         {
-            var node = factory.GetNodeValue();
-
-            if (providerSpecificPickList is null || 0 == providerSpecificPickList.Count)
+            var pso = TryMakePsObjectFromPathNode(factory, providerSpecificPickList);
+            if (pso.created)
             {
-                var pso = TryMakePsObjectFromPathNode(factory);
-                if (pso.created)
-                {
-                    WritePropertyObject(pso.psObject, path);
-                }
-            }
-            else
-            {
-                PSObject values = new PSObject();
-                var value = node.Item;
-                var propDescs = TypeDescriptor.GetProperties(value);
-                var props = (from PropertyDescriptor prop in propDescs
-                             where (providerSpecificPickList.Contains(prop.Name, StringComparer.InvariantCultureIgnoreCase))
-                             select prop);
-
-                props.ToList().ForEach(p =>
-                                           {
-                                               var iv = p.GetValue(value);
-                                               if (null != iv)
-                                               {
-                                                   values.Properties.Add(new PSNoteProperty(p.Name, p.GetValue(value)));
-                                               }
-                                           });
-                WritePropertyObject(values, path);
+                WritePropertyObject(pso.psObject, path);
             }
         }
 
@@ -379,7 +355,7 @@ namespace CodeOwls.PowerShell.Provider
 
         #endregion Implementation of ICmdletProviderSupportsHelp
 
-        private static (bool created, PSObject psObject, bool isCollection) TryMakePsObjectFromPathNode(IPathNode pathNode)
+        private static (bool created, PSObject psObject, bool isCollection) TryMakePsObjectFromPathNode(IPathNode pathNode, IEnumerable<string> propertyNames)
         {
             var pathNodeValue = pathNode.GetNodeValue();
             if (null == pathNodeValue)
@@ -388,12 +364,23 @@ namespace CodeOwls.PowerShell.Provider
             }
 
             PSObject psObject = PSObject.AsPSObject(pathNodeValue.Item);
-            psObject.Properties.Add(new PSNoteProperty(ItemModePropertyName, pathNode.ItemMode));
-            pathNodeValue.GetItemProperties(propertyNames: null).Aggregate(psObject.Properties, (psoProps, p) =>
-             {
-                 psoProps.Add(p);
-                 return psoProps;
-             });
+            if (propertyNames is null || !propertyNames.Any())
+            {
+                psObject.Properties.Add(new PSNoteProperty(ItemModePropertyName, pathNode.ItemMode));
+                pathNodeValue.GetItemProperties(propertyNames: null).Aggregate(psObject.Properties, (psoProps, p) =>
+                {
+                    psoProps.Add(p);
+                    return psoProps;
+                });
+            }
+            else
+            {
+                pathNodeValue.GetItemProperties(propertyNames).Aggregate(psObject.Properties, (psoProps, p) =>
+                {
+                    psoProps.Add(p);
+                    return psoProps;
+                });
+            }
             return (true, psObject, pathNodeValue.IsCollection);
         }
 
@@ -1107,7 +1094,7 @@ namespace CodeOwls.PowerShell.Provider
 
         private void WritePathNode(string nodeContainerPath, IPathNode factory)
         {
-            var pso = TryMakePsObjectFromPathNode(factory);
+            var pso = TryMakePsObjectFromPathNode(factory, propertyNames: null);
 
             //nodeContainerPath = SessionState.Path.GetUnresolvedProviderPathFromPSPath(nodeContainerPath);
 

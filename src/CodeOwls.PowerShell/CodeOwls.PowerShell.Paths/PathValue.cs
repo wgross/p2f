@@ -21,7 +21,9 @@
 */
 
 using CodeOwls.PowerShell.Paths.Extensions;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Management.Automation;
 
@@ -70,6 +72,26 @@ namespace CodeOwls.PowerShell.Provider.PathNodes
             private set;
         }
 
-        public virtual IEnumerable<PSPropertyInfo> GetItemProperties(IEnumerable<string> propertyNames) => Enumerable.Empty<PSPropertyInfo>();
+        public virtual IEnumerable<PSPropertyInfo> GetItemProperties(IEnumerable<string> propertyNames)
+        {
+            if (propertyNames is null)
+            {
+                yield break;
+            }
+
+            var propDescs = TypeDescriptor.GetProperties(Item);
+            var props = (from PropertyDescriptor prop in propDescs
+                         where (propertyNames.Contains(prop.Name, StringComparer.InvariantCultureIgnoreCase))
+                         select prop);
+
+            foreach (var p in props)
+            {
+                var iv = p.GetValue(Item);
+                if (null != iv)
+                {
+                    yield return new PSNoteProperty(p.Name, iv);
+                }
+            };
+        }
     }
 }
