@@ -389,11 +389,11 @@ namespace CodeOwls.PowerShell.Provider
 
             PSObject psObject = PSObject.AsPSObject(pathNodeValue.Item);
             psObject.Properties.Add(new PSNoteProperty(ItemModePropertyName, pathNode.ItemMode));
-            pathNodeValue.ItemProperties.Aggregate(psObject.Properties, (psoProps, p) =>
-            {
-                psoProps.Add(p);
-                return psoProps;
-            });
+            pathNodeValue.GetItemProperties(propertyNames: null).Aggregate(psObject.Properties, (psoProps, p) =>
+             {
+                 psoProps.Add(p);
+                 return psoProps;
+             });
             return (true, psObject, pathNodeValue.IsCollection);
         }
 

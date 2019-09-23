@@ -29,7 +29,7 @@ namespace CodeOwls.PowerShell.Provider.PathNodes
     {
         object Item { get; }
 
-        IEnumerable<PSPropertyInfo> ItemProperties { get; }
+        IEnumerable<PSPropertyInfo> GetItemProperties(IEnumerable<string> propertyNames);
 
         string Name { get; }
 

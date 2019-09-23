@@ -70,6 +70,6 @@ namespace CodeOwls.PowerShell.Provider.PathNodes
             private set;
         }
 
-        public virtual IEnumerable<PSPropertyInfo> ItemProperties => Enumerable.Empty<PSPropertyInfo>();
+        public virtual IEnumerable<PSPropertyInfo> GetItemProperties(IEnumerable<string> propertyNames) => Enumerable.Empty<PSPropertyInfo>();
     }
 }
