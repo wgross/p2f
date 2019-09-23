@@ -142,20 +142,22 @@ namespace CodeOwls.PowerShell.Provider
         private void GetProperty(string path, IPathNode factory, Collection<string> providerSpecificPickList)
         {
             var node = factory.GetNodeValue();
-            PSObject values = null;
 
-            if (null == providerSpecificPickList || 0 == providerSpecificPickList.Count)
+            if (providerSpecificPickList is null || 0 == providerSpecificPickList.Count)
             {
-                values = PSObject.AsPSObject(node.Item);
+                var pso = TryMakePsObjectFromPathNode(factory);
+                if (pso.created)
+                {
+                    WritePropertyObject(pso.psObject, path);
+                }
             }
             else
             {
-                values = new PSObject();
+                PSObject values = new PSObject();
                 var value = node.Item;
                 var propDescs = TypeDescriptor.GetProperties(value);
                 var props = (from PropertyDescriptor prop in propDescs
-                             where (providerSpecificPickList.Contains(prop.Name,
-                                                                      StringComparer.InvariantCultureIgnoreCase))
+                             where (providerSpecificPickList.Contains(prop.Name, StringComparer.InvariantCultureIgnoreCase))
                              select prop);
 
                 props.ToList().ForEach(p =>
@@ -166,8 +168,8 @@ namespace CodeOwls.PowerShell.Provider
                                                    values.Properties.Add(new PSNoteProperty(p.Name, p.GetValue(value)));
                                                }
                                            });
+                WritePropertyObject(values, path);
             }
-            WritePropertyObject(values, path);
         }
 
         public object GetPropertyDynamicParameters(string path, Collection<string> providerSpecificPickList)
@@ -376,6 +378,24 @@ namespace CodeOwls.PowerShell.Provider
         }
 
         #endregion Implementation of ICmdletProviderSupportsHelp
+
+        private static (bool created, PSObject psObject, bool isCollection) TryMakePsObjectFromPathNode(IPathNode pathNode)
+        {
+            var pathNodeValue = pathNode.GetNodeValue();
+            if (null == pathNodeValue)
+            {
+                return (false, null, false);
+            }
+
+            PSObject psObject = PSObject.AsPSObject(pathNodeValue.Item);
+            psObject.Properties.Add(new PSNoteProperty(ItemModePropertyName, pathNode.ItemMode));
+            pathNodeValue.ItemProperties.Aggregate(psObject.Properties, (psoProps, p) =>
+            {
+                psoProps.Add(p);
+                return psoProps;
+            });
+            return (true, psObject, pathNodeValue.IsCollection);
+        }
 
         private void WriteCmdletNotSupportedAtNodeError(string path, string cmdlet, string errorId)
         {
@@ -1087,23 +1107,14 @@ namespace CodeOwls.PowerShell.Provider
 
         private void WritePathNode(string nodeContainerPath, IPathNode factory)
         {
-            var value = factory.GetNodeValue();
-            if (null == value)
-            {
-                return;
-            }
+            var pso = TryMakePsObjectFromPathNode(factory);
 
             //nodeContainerPath = SessionState.Path.GetUnresolvedProviderPathFromPSPath(nodeContainerPath);
 
-            PSObject pso = PSObject.AsPSObject(value.Item);
-            pso.Properties.Add(new PSNoteProperty(ItemModePropertyName, factory.ItemMode));
-            value.ItemProperties.Aggregate(pso.Properties, (pp, p) =>
+            if (pso.created)
             {
-                pp.Add(p);
-                return pp;
-            });
-
-            WriteItemObject(pso, nodeContainerPath, value.IsCollection);
+                WriteItemObject(pso.psObject, nodeContainerPath, pso.isCollection);
+            }
         }
 
         private void WritePathNode(string nodeContainerPath, IPathValue value)
