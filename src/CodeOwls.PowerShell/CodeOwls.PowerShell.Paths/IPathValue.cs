@@ -20,19 +20,58 @@
 	IN THE SOFTWARE.
 */
 
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 using System.Management.Automation;
 
 namespace CodeOwls.PowerShell.Provider.PathNodes
 {
     public interface IPathValue
     {
-        object Item { get; }
-
-        IEnumerable<PSPropertyInfo> GetItemProperties(IEnumerable<string> propertyNames);
-
         string Name { get; }
 
         bool IsCollection { get; }
+
+        object Item { get; }
+
+        IEnumerable<PSPropertyInfo> GetItemProperties(IEnumerable<string> propertyNames)
+        {
+            if (propertyNames is null)
+            {
+                yield break;
+            }
+
+            var propDescs = TypeDescriptor.GetProperties(Item);
+            var props = (from PropertyDescriptor prop in propDescs
+                         where (propertyNames.Contains(prop.Name, StringComparer.InvariantCultureIgnoreCase))
+                         select prop);
+
+            foreach (var p in props)
+            {
+                var iv = p.GetValue(Item);
+                if (null != iv)
+                {
+                    yield return new PSNoteProperty(p.Name, iv);
+                }
+            };
+        }
+
+        void SetItemProperties(IEnumerable<PSPropertyInfo> properties) => SetItemProperties(this, properties);
+
+        static void SetItemProperties(IPathValue thisPathValue, IEnumerable<PSPropertyInfo> properties)
+        {
+            var nodeItem = thisPathValue.Item;
+            var propDescs = TypeDescriptor.GetProperties(nodeItem);
+            var props = (from PropertyDescriptor propDesc in propDescs
+                         let psod = (from pso in properties
+                                     where StringComparer.InvariantCultureIgnoreCase.Equals(pso.Name, propDesc.Name)
+                                     select pso).FirstOrDefault()
+                         where null != psod
+                         select new { PSProperty = psod, Property = propDesc });
+
+            props.ToList().ForEach(p => p.Property.SetValue(nodeItem, p.PSProperty.Value));
+        }
     }
 }

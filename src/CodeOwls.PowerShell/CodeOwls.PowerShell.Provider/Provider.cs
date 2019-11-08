@@ -29,7 +29,6 @@ using CodeOwls.PowerShell.Provider.PathNodes;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -81,12 +80,9 @@ namespace CodeOwls.PowerShell.Provider
 
         private string NormalizeWhacks(string path)
         {
-            if (null != PSDriveInfo &&
-                !String.IsNullOrEmpty(PSDriveInfo.Root) &&
-                path.StartsWith(PSDriveInfo.Root))
+            if (PSDriveInfo is { } && !string.IsNullOrEmpty(PSDriveInfo.Root) && path.StartsWith(PSDriveInfo.Root))
             {
-                var sub = path.Substring(PSDriveInfo.Root.Length);
-                return PSDriveInfo.Root + NormalizeWhacks(sub);
+                return PSDriveInfo.Root + NormalizeWhacks(path.Substring(PSDriveInfo.Root.Length));
             }
 
             return path.Replace("/", "\\");
@@ -95,10 +91,9 @@ namespace CodeOwls.PowerShell.Provider
         private string EnsurePathIsRooted(string path)
         {
             path = NormalizeWhacks(path);
-            if (null != PSDriveInfo &&
-                !String.IsNullOrEmpty(PSDriveInfo.Root))
+            if (this.PSDriveInfo is { } && !string.IsNullOrEmpty(PSDriveInfo.Root))
             {
-                var separator = PSDriveInfo.Root.EndsWith("\\") ? String.Empty : "\\";
+                var separator = PSDriveInfo.Root.EndsWith("\\") ? string.Empty : "\\";
                 if (!path.StartsWith(PSDriveInfo.Root))
                 {
                     path = PSDriveInfo.Root + separator + path;
@@ -108,15 +103,11 @@ namespace CodeOwls.PowerShell.Provider
             return path;
         }
 
-        protected virtual IProviderContext CreateContext(string path)
-        {
-            return CreateContext(path, false, true);
-        }
+        #region Create provider contexts for calling node methods
 
-        protected virtual IProviderContext CreateContext(string path, bool recurse)
-        {
-            return CreateContext(path, recurse, false);
-        }
+        protected virtual IProviderContext CreateContext(string path) => CreateContext(path, false, true);
+
+        protected virtual IProviderContext CreateContext(string path, bool recurse) => CreateContext(path, recurse, false);
 
         protected virtual IProviderContext CreateContext(string path, bool recurse, bool resolveFinalNodeFilterItems)
         {
@@ -125,19 +116,15 @@ namespace CodeOwls.PowerShell.Provider
             return context;
         }
 
+        #endregion Create provider contexts for calling node methods
+
         #region Implementation of IPropertyCmdletProvider
 
         public void GetProperty(string path, Collection<string> providerSpecificPickList)
-        {
-            Action a = () => DoGetProperty(path, providerSpecificPickList);
-            ExecuteAndLog(a, "GetProperty", path, providerSpecificPickList.ToArgList());
-        }
+            => ExecuteAndLog(() => DoGetProperty(path, providerSpecificPickList), "GetProperty", path, providerSpecificPickList.ToArgList());
 
         private void DoGetProperty(string path, Collection<string> providerSpecificPickList)
-        {
-            var factories = GetNodeFactoryFromPath(path);
-            factories.ToList().ForEach(f => GetProperty(path, f, providerSpecificPickList));
-        }
+            => GetNodeFactoryFromPath(path).ToList().ForEach(f => GetProperty(path, f, providerSpecificPickList));
 
         private void GetProperty(string path, IPathNode factory, Collection<string> providerSpecificPickList)
         {
@@ -148,43 +135,18 @@ namespace CodeOwls.PowerShell.Provider
             }
         }
 
-        public object GetPropertyDynamicParameters(string path, Collection<string> providerSpecificPickList)
-        {
-            return null;
-        }
+        public object GetPropertyDynamicParameters(string path, Collection<string> providerSpecificPickList) => null;
 
         public void SetProperty(string path, PSObject propertyValue)
-        {
-            Action a = () => DoSetProperty(path, propertyValue);
-            ExecuteAndLog(a, "SetProperty", path, propertyValue.ToArgString());
-        }
+            => ExecuteAndLog(() => DoSetProperty(path, propertyValue), "SetProperty", path, propertyValue.ToArgString());
 
         private void DoSetProperty(string path, PSObject propertyValue)
-        {
-            var factories = GetNodeFactoryFromPath(path);
-            factories.ToList().ForEach(f => SetProperty(path, f, propertyValue));
-        }
+            => GetNodeFactoryFromPath(path).ToList().ForEach(f => SetProperty(path, f, propertyValue));
 
         private void SetProperty(string path, IPathNode factory, PSObject propertyValue)
-        {
-            var node = factory.GetNodeValue();
-            var value = node.Item;
-            var propDescs = TypeDescriptor.GetProperties(value);
-            var psoDesc = propertyValue.Properties;
-            var props = (from PropertyDescriptor prop in propDescs
-                         let psod = (from pso in psoDesc
-                                     where StringComparer.InvariantCultureIgnoreCase.Equals(pso.Name, prop.Name)
-                                     select pso).FirstOrDefault()
-                         where null != psod
-                         select new { PSProperty = psod, Property = prop });
+            => factory.GetNodeValue().SetItemProperties(propertyValue.Properties);
 
-            props.ToList().ForEach(p => p.Property.SetValue(value, p.PSProperty.Value));
-        }
-
-        public object SetPropertyDynamicParameters(string path, PSObject propertyValue)
-        {
-            return null;
-        }
+        public object SetPropertyDynamicParameters(string path, PSObject propertyValue) => null;
 
         public void ClearProperty(string path, Collection<string> propertyToClear)
         {
@@ -537,21 +499,16 @@ namespace CodeOwls.PowerShell.Provider
         }
 
         protected override string NormalizeRelativePath(string path, string basePath)
-        {
-            Func<string> a = () => NormalizeWhacks(base.NormalizeRelativePath(path, basePath));
-            return ExecuteAndLog(a, "NormalizeRelativePath", path, basePath);
-        }
+            => ExecuteAndLog(() => NormalizeWhacks(base.NormalizeRelativePath(path, basePath)), nameof(NormalizeRelativePath), path, basePath);
 
-        protected override string GetChildName(string path)
-        {
-            Func<string> a = () => DoGetChildName(path);
-            return ExecuteAndLog(a, "GetChildName", path);
-        }
+        protected override string GetChildName(string path) => ExecuteAndLog(() => DoGetChildName(path), nameof(GetChildName), path);
 
         private string DoGetChildName(string path)
         {
-            path = NormalizeWhacks(path);
-            return path.Split('\\').Last();
+            var lastItem = NormalizeWhacks(path).Split('\\').Last();
+            if (string.IsNullOrEmpty(lastItem))
+                return this.PSDriveInfo.Root;
+            return lastItem;
         }
 
         private void GetItem(string path, IPathNode factory)
@@ -566,16 +523,12 @@ namespace CodeOwls.PowerShell.Provider
             }
         }
 
-        protected override void GetItem(string path)
-        {
-            Action a = () => DoGetItem(path);
-            ExecuteAndLog(a, "GetItem", path);
-        }
+        protected override void GetItem(string path) => ExecuteAndLog(() => DoGetItem(path), nameof(GetItem), path);
 
         private void DoGetItem(string path)
         {
             var factories = GetNodeFactoryFromPath(path);
-            if (null == factories)
+            if (factories is null)
             {
                 return;
             }
@@ -1015,10 +968,7 @@ namespace CodeOwls.PowerShell.Provider
         }
 
         protected override void NewItem(string path, string itemTypeName, object newItemValue)
-        {
-            Action a = () => DoNewItem(path, itemTypeName, newItemValue);
-            ExecuteAndLog(a, "NewItem", itemTypeName, newItemValue.ToArgString());
-        }
+            => ExecuteAndLog(() => DoNewItem(path, itemTypeName, newItemValue), nameof(NewItem), itemTypeName, newItemValue.ToArgString());
 
         private void DoNewItem(string path, string itemTypeName, object newItemValue)
         {
@@ -1034,36 +984,44 @@ namespace CodeOwls.PowerShell.Provider
 
         private void NewItem(string path, bool isParentPathNodeFactory, IPathNode factory, string itemTypeName, object newItemValue)
         {
-            var @new = factory as INewItem;
-            if (null == factory || null == @new)
+            var newItemFactory = factory as INewItem;
+            if (newItemFactory is null)
             {
                 WriteCmdletNotSupportedAtNodeError(path, ProviderCmdlet.NewItem, NewItemNotSupportedErrorID);
                 return;
             }
 
-            var fullPath = path;
-            var parentPath = fullPath;
-            var child = isParentPathNodeFactory ? GetChildName(path) : null;
-            if (null != child)
+            var newItemPath = (
+                full: path,
+                parent: path,
+                childName: isParentPathNodeFactory ? GetChildName(path) : null
+            );
+
+            if (!isParentPathNodeFactory && string.IsNullOrEmpty(newItemPath.childName))
             {
-                parentPath = GetParentPath(fullPath, GetRootPath());
+                WriteGeneralCmdletError(new InvalidOperationException($"item {newItemPath.full} already exists"), NewItemInvokeErrorID, path);
+                return;
             }
 
-            if (!ShouldProcess(fullPath, ProviderCmdlet.NewItem))
+            if (newItemPath.childName is { })
+            {
+                newItemPath.parent = GetParentPath(newItemPath.full, GetRootPath());
+            }
+
+            if (!ShouldProcess(newItemPath.full, ProviderCmdlet.NewItem))
             {
                 return;
             }
 
             try
             {
-                var item = @new.NewItem(CreateContext(fullPath), child, itemTypeName, newItemValue);
-                PathValue value = item as PathValue;
+                var item = newItemFactory.NewItem(CreateContext(newItemPath.full), newItemPath.childName, itemTypeName, newItemValue);
 
-                WritePathNode(parentPath, value);
+                WritePathNode(newItemPath.parent, item);
             }
             catch (Exception e)
             {
-                WriteGeneralCmdletError(e, NewItemInvokeErrorID, fullPath);
+                WriteGeneralCmdletError(e, NewItemInvokeErrorID, newItemPath.full);
             }
         }
 
@@ -1115,10 +1073,7 @@ namespace CodeOwls.PowerShell.Provider
         }
 
         protected override void RemoveItem(string path, bool recurse)
-        {
-            Action a = () => DoRemoveItem(path, recurse);
-            ExecuteAndLog(a, "RemoveItem", path, recurse.ToString());
-        }
+            => ExecuteAndLog(() => DoRemoveItem(path, recurse), nameof(RemoveItem), path, recurse.ToString());
 
         private void DoRemoveItem(string path, bool recurse)
         {
@@ -1198,10 +1153,7 @@ namespace CodeOwls.PowerShell.Provider
             return factories.FirstOrDefault();
         }
 
-        private IEnumerable<IPathNode> GetNodeFactoryFromPath(string path)
-        {
-            return GetNodeFactoryFromPath(path, true);
-        }
+        private IEnumerable<IPathNode> GetNodeFactoryFromPath(string path) => GetNodeFactoryFromPath(path, true);
 
         private IEnumerable<IPathNode> GetNodeFactoryFromPath(string path, bool resolveFinalFilter)
         {

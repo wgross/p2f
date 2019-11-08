@@ -33,7 +33,7 @@ namespace CodeOwls.PowerShell.Provider.PathNodeProcessors
     
     public interface IProviderContext
     {        
-        PSDriveInfo Drive { get; }
+        PSDriveInfo? Drive { get; }
         string GetResourceString(string baseName, string resourceId);
         void ThrowTerminatingError(ErrorRecord errorRecord);
         bool ShouldProcess(string target);
