@@ -448,9 +448,7 @@ namespace CodeOwls.PowerShell.Provider
 
         private void DoMoveItem(string path, string destinationPath, IMoveItem moveItem)
         {
-            bool targetNodeIsParentNode;
-            var targetNodes = GetNodeFactoryFromPathOrParent(destinationPath, out targetNodeIsParentNode);
-            var targetNode = targetNodes.FirstOrDefault();
+            var targetNode = GetNodeFactoryFromPathOrParent(destinationPath, out var targetNodeIsParentNode).FirstOrDefault();
 
             var sourceName = GetChildName(path);
             var finalDestinationPath = targetNodeIsParentNode ? GetChildName(destinationPath) : null;
@@ -972,14 +970,9 @@ namespace CodeOwls.PowerShell.Provider
 
         private void DoNewItem(string path, string itemTypeName, object newItemValue)
         {
-            bool isParentOfPath;
-            var factories = GetNodeFactoryFromPathOrParent(path, out isParentOfPath);
-            if (null == factories)
-            {
-                return;
-            }
-
-            factories.ToList().ForEach(f => NewItem(path, isParentOfPath, f, itemTypeName, newItemValue));
+            GetNodeFactoryFromPathOrParent(path, out var isParentOfPath)
+                .ToList()
+                .ForEach(f => NewItem(path, isParentOfPath, f, itemTypeName, newItemValue));
         }
 
         private void NewItem(string path, bool isParentPathNodeFactory, IPathNode factory, string itemTypeName, object newItemValue)
@@ -1042,14 +1035,14 @@ namespace CodeOwls.PowerShell.Provider
 
         private object DoNewItemDynamicParameters(string path)
         {
-            var factory = GetNodeFactoryFromPathOrParent(path).FirstOrDefault();
-            var @new = factory as INewItem;
-            if (null == factory || null == @new)
+            var factory = GetNodeFactoryFromPathOrParent(path, out var _).FirstOrDefault();
+            var newItemFactory = factory as INewItem;
+            if (null == factory || null == newItemFactory)
             {
                 return null;
             }
 
-            return @new.NewItemParameters;
+            return newItemFactory.NewItemParameters;
         }
 
         private void WritePathNode(string nodeContainerPath, IPathNode factory)
@@ -1142,6 +1135,8 @@ namespace CodeOwls.PowerShell.Provider
             return remove.RemoveItemParameters;
         }
 
+        #region Resolve path to responsible node class
+
         private IPathNode GetFirstNodeFactoryFromPath(string path)
         {
             var factories = GetNodeFactoryFromPath(path);
@@ -1168,38 +1163,34 @@ namespace CodeOwls.PowerShell.Provider
             return factories;
         }
 
-        private IEnumerable<IPathNode> GetNodeFactoryFromPathOrParent(string path)
-        {
-            bool r;
-            return GetNodeFactoryFromPathOrParent(path, out r);
-        }
-
         private IEnumerable<IPathNode> GetNodeFactoryFromPathOrParent(string path, out bool isParentOfPath)
         {
             isParentOfPath = false;
-            IEnumerable<IPathNode> factory = null;
-            factory = ResolvePath(path);
+            var nodes = ResolvePath(path);
 
-            if (null == factory || !factory.Any())
+            if (null == nodes || !nodes.Any())
             {
                 path = GetParentPath(path, null);
-                factory = ResolvePath(path);
+                nodes = ResolvePath(path);
 
-                if (null == factory || !factory.Any())
+                if (null == nodes || !nodes.Any())
                 {
-                    return null;
+                    //refactor: return null;
+                    return Enumerable.Empty<IPathNode>();
                 }
 
                 isParentOfPath = true;
             }
 
-            if (!String.IsNullOrEmpty(Filter))
+            if (!string.IsNullOrEmpty(Filter))
             {
-                factory = factory.First().Resolve(CreateContext(null), null);
+                nodes = nodes.First().Resolve(CreateContext(null), null);
             }
 
-            return factory;
+            return nodes;
         }
+
+        #endregion Resolve path to responsible node class
 
         protected override bool HasChildItems(string path)
         {
@@ -1279,10 +1270,7 @@ namespace CodeOwls.PowerShell.Provider
 
         private IPathValue DoCopyItem(string path, string copyPath, bool recurse, ICopyItem copyItem)
         {
-            bool targetNodeIsParentNode;
-            var targetNodes = GetNodeFactoryFromPathOrParent(copyPath, out targetNodeIsParentNode);
-            var targetNode = targetNodes.FirstOrDefault();
-
+            var targetNode = GetNodeFactoryFromPathOrParent(copyPath, out var targetNodeIsParentNode).FirstOrDefault();
             var sourceName = GetChildName(path);
             var copyName = targetNodeIsParentNode ? GetChildName(copyPath) : null;
 
