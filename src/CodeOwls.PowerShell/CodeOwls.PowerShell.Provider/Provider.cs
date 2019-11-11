@@ -366,10 +366,11 @@ namespace CodeOwls.PowerShell.Provider
                     ));
         }
 
+        #region NavigationCmdletProvider: IsItemContainer
+
         protected override bool IsItemContainer(string path)
         {
-            Func<bool> a = () => DoIsItemContainer(path);
-            return ExecuteAndLog(a, "IsItemContainer", path);
+            return ExecuteAndLog(() => DoIsItemContainer(path), nameof(IsItemContainer), path);
         }
 
         private bool DoIsItemContainer(string path)
@@ -395,7 +396,10 @@ namespace CodeOwls.PowerShell.Provider
             return value.IsCollection;
         }
 
+        #endregion NavigationCmdletProvider: IsItemContainer
+
         protected override object MoveItemDynamicParameters(string path, string destination)
+
         {
             return null;
         }
@@ -414,10 +418,10 @@ namespace CodeOwls.PowerShell.Provider
 
         private void MoveItem(string path, IPathNode sourcePathNode, string destination)
         {
-            var copy = GetCopyItem(sourcePathNode);
-            var move = sourcePathNode as IMoveItem;
-            var remove = copy as IRemoveItem;
-            if (null == move && (null == copy || null == remove))
+            var copyItem = sourcePathNode as ICopyItem;
+            var moveItem = sourcePathNode as IMoveItem;
+            var removeItem = copyItem as IRemoveItem;
+            if (null == moveItem && (null == copyItem || null == removeItem))
             {
                 WriteCmdletNotSupportedAtNodeError(path, ProviderCmdlet.MoveItem, MoveItemNotSupportedErrorID);
                 return;
@@ -430,14 +434,14 @@ namespace CodeOwls.PowerShell.Provider
 
             try
             {
-                if (null != move)
+                if (null != moveItem)
                 {
-                    DoMoveItem(path, destination, move);
+                    DoMoveItem(path, destination, moveItem);
                 }
                 else
                 {
-                    DoCopyItem(path, destination, true, copy);
-                    DoRemoveItem(path, true, remove);
+                    DoCopyItem(path, destination, true, copyItem);
+                    DoRemoveItem(path, true, removeItem);
                 }
             }
             catch (Exception e)
@@ -449,7 +453,6 @@ namespace CodeOwls.PowerShell.Provider
         private void DoMoveItem(string path, string destinationPath, IMoveItem moveItem)
         {
             var targetNode = GetNodeFactoryFromPathOrParent(destinationPath, out var targetNodeIsParentNode).FirstOrDefault();
-
             var sourceName = GetChildName(path);
             var finalDestinationPath = targetNodeIsParentNode ? GetChildName(destinationPath) : null;
 
@@ -509,6 +512,21 @@ namespace CodeOwls.PowerShell.Provider
             return lastItem;
         }
 
+        #region ItemCmdletProvider: Get-Item
+
+        protected override void GetItem(string path) => ExecuteAndLog(() => DoGetItem(path), nameof(GetItem), path);
+
+        private void DoGetItem(string path)
+        {
+            var factories = GetNodeFactoryFromPath(path);
+            if (!factories.Any())
+            {
+                return;
+            }
+
+            factories.ToList().ForEach(f => GetItem(path, f));
+        }
+
         private void GetItem(string path, IPathNode factory)
         {
             try
@@ -521,20 +539,10 @@ namespace CodeOwls.PowerShell.Provider
             }
         }
 
-        protected override void GetItem(string path) => ExecuteAndLog(() => DoGetItem(path), nameof(GetItem), path);
-
-        private void DoGetItem(string path)
-        {
-            var factories = GetNodeFactoryFromPath(path);
-            if (factories is null)
-            {
-                return;
-            }
-
-            factories.ToList().ForEach(f => GetItem(path, f));
-        }
+        #endregion ItemCmdletProvider: Get-Item
 
         private void SetItem(string path, IPathNode factory, object value)
+
         {
             var @set = factory as ISetItem;
             if (null == factory || null == @set)
@@ -574,7 +582,7 @@ namespace CodeOwls.PowerShell.Provider
         private void DoSetItem(string path, object value)
         {
             var factories = GetNodeFactoryFromPath(path);
-            if (null == factories)
+            if (!factories.Any())
             {
                 WriteError(
                     new ErrorRecord(
@@ -635,7 +643,7 @@ namespace CodeOwls.PowerShell.Provider
         private void DoClearItem(string path)
         {
             var factories = GetNodeFactoryFromPath(path);
-            if (null == factories)
+            if (!factories.Any())
             {
                 return;
             }
@@ -706,7 +714,7 @@ namespace CodeOwls.PowerShell.Provider
         private void DoInvokeDefaultAction(string path)
         {
             var factories = GetNodeFactoryFromPath(path);
-            if (null == factories)
+            if (!factories.Any())
             {
                 return;
             }
@@ -751,10 +759,11 @@ namespace CodeOwls.PowerShell.Provider
             }
         }
 
+        #region ItemCmdletProvider: ItemExists
+
         protected override bool ItemExists(string path)
         {
-            Func<bool> a = () => DoItemExists(path);
-            return ExecuteAndLog(a, "ItemExists", path);
+            return ExecuteAndLog(() => DoItemExists(path), nameof(ItemExists), path);
         }
 
         private bool DoItemExists(string path)
@@ -764,24 +773,31 @@ namespace CodeOwls.PowerShell.Provider
                 return true;
             }
 
-            return null != GetNodeFactoryFromPath(path);
+            return GetNodeFactoryFromPath(path).Any();
         }
+
+        #endregion ItemCmdletProvider: ItemExists
+
+        #region ItemCmdletProvider: IsValidPath
 
         protected override bool IsValidPath(string path)
         {
-            return ExecuteAndLog(() => true, "IsValidPath", path);
+            return ExecuteAndLog(() => true, nameof(IsValidPath), path);
         }
+
+        #endregion ItemCmdletProvider: IsValidPath
+
+        #region ContainerCmdletProvider : GetChildItems
 
         protected override void GetChildItems(string path, bool recurse)
         {
-            Action a = () => DoGetChildItems(path, recurse);
-            ExecuteAndLog(a, "GetChildItems", path, recurse.ToString());
+            ExecuteAndLog(() => DoGetChildItems(path, recurse), nameof(GetChildItems), path, recurse.ToString());
         }
 
         private void DoGetChildItems(string path, bool recurse)
         {
             var nodeFactory = GetNodeFactoryFromPath(path, false);
-            if (null == nodeFactory)
+            if (!nodeFactory.Any())
             {
                 return;
             }
@@ -795,6 +811,8 @@ namespace CodeOwls.PowerShell.Provider
             var children = pathNode.GetNodeChildren(context);
             WriteChildItem(path, recurse, children);
         }
+
+        #endregion ContainerCmdletProvider : GetChildItems
 
         private void WriteChildItem(string path, bool recurse, IEnumerable<IPathNode> children)
         {
@@ -833,11 +851,7 @@ namespace CodeOwls.PowerShell.Provider
                     });
         }
 
-        private bool IsRootPath(string path)
-        {
-            path = Regex.Replace(path.ToLower(), @"[a-z0-9_]+:[/\\]?", "");
-            return String.IsNullOrEmpty(path);
-        }
+        private bool IsRootPath(string path) => string.IsNullOrEmpty(Regex.Replace(path.ToLower(), @"[a-z0-9_]+:[/\\]?", ""));
 
         protected override object GetChildItemsDynamicParameters(string path, bool recurse)
         {
@@ -865,7 +879,7 @@ namespace CodeOwls.PowerShell.Provider
         private void DoGetChildNames(string path, ReturnContainers returnContainers)
         {
             var nodeFactory = GetNodeFactoryFromPath(path, false);
-            if (null == nodeFactory)
+            if (!nodeFactory.Any())
             {
                 return;
             }
@@ -1137,25 +1151,15 @@ namespace CodeOwls.PowerShell.Provider
 
         #region Resolve path to responsible node class
 
-        private IPathNode GetFirstNodeFactoryFromPath(string path)
-        {
-            var factories = GetNodeFactoryFromPath(path);
-            if (null == factories)
-            {
-                return null;
-            }
-
-            return factories.FirstOrDefault();
-        }
+        private IPathNode GetFirstNodeFactoryFromPath(string path) => GetNodeFactoryFromPath(path).FirstOrDefault();
 
         private IEnumerable<IPathNode> GetNodeFactoryFromPath(string path) => GetNodeFactoryFromPath(path, true);
 
         private IEnumerable<IPathNode> GetNodeFactoryFromPath(string path, bool resolveFinalFilter)
         {
-            IEnumerable<IPathNode> factories = null;
-            factories = ResolvePath(path);
+            IEnumerable<IPathNode> factories = ResolvePath(path);
 
-            if (resolveFinalFilter && !String.IsNullOrEmpty(Filter))
+            if (resolveFinalFilter && !string.IsNullOrEmpty(Filter))
             {
                 factories = factories.First().Resolve(CreateContext(path), null);
             }
@@ -1168,7 +1172,7 @@ namespace CodeOwls.PowerShell.Provider
             isParentOfPath = false;
             var nodes = ResolvePath(path);
 
-            if (null == nodes || !nodes.Any())
+            if (!nodes.Any())
             {
                 path = GetParentPath(path, null);
                 nodes = ResolvePath(path);
@@ -1213,59 +1217,48 @@ namespace CodeOwls.PowerShell.Provider
             return nodes.Any();
         }
 
+        #region ContainerCmdletProvider: CopyItem
+
         protected override void CopyItem(string path, string copyPath, bool recurse)
-        {
-            Action a = () => DoCopyItem(path, copyPath, recurse);
-            ExecuteAndLog(a, "CopyItem", path, copyPath, recurse.ToString());
-        }
+            => ExecuteAndLog(() => DoCopyItem(path, copyPath, recurse), nameof(CopyItem), path, copyPath, recurse.ToString());
 
         private void DoCopyItem(string path, string copyPath, bool recurse)
         {
-            var sourceNodes = GetNodeFactoryFromPath(path);
-            if (null == sourceNodes)
+            var sourceNodes = GetNodeFactoryFromPath(path).ToList();
+            if (sourceNodes.Any())
             {
-                WriteError(
-                    new ErrorRecord(
-                         new ItemNotFoundException(path),
-                         CopyItemSourceDoesNotExistErrorID,
-                         ErrorCategory.ObjectNotFound,
-                         path
-                    )
-                );
-                return;
+                sourceNodes.ToList().ForEach(n => CopyItem(path, n, copyPath, recurse));
             }
-
-            sourceNodes.ToList().ForEach(n => CopyItem(path, n, copyPath, recurse));
+            else
+            {
+                WriteError(new ErrorRecord(
+                    new ItemNotFoundException(path),
+                    CopyItemSourceDoesNotExistErrorID,
+                    ErrorCategory.ObjectNotFound,
+                    path
+                ));
+            }
         }
 
         private void CopyItem(string path, IPathNode sourcePathNode, string copyPath, bool recurse)
         {
-            ICopyItem copyItem = GetCopyItem(sourcePathNode);
-            if (null == copyItem)
+            if (sourcePathNode is ICopyItem copyItem)
             {
-                WriteCmdletNotSupportedAtNodeError(path, ProviderCmdlet.CopyItem, CopyItemNotSupportedErrorID);
-                return;
-            }
+                if (!ShouldProcess(path, ProviderCmdlet.CopyItem))
+                {
+                    return;
+                }
 
-            if (!ShouldProcess(path, ProviderCmdlet.CopyItem))
-            {
-                return;
+                try
+                {
+                    WritePathNode(copyPath, DoCopyItem(path, copyPath, recurse, copyItem));
+                }
+                catch (Exception e)
+                {
+                    WriteGeneralCmdletError(e, CopyItemInvokeErrorID, path);
+                }
             }
-
-            try
-            {
-                IPathValue value = DoCopyItem(path, copyPath, recurse, copyItem);
-                WritePathNode(copyPath, value);
-            }
-            catch (Exception e)
-            {
-                WriteGeneralCmdletError(e, CopyItemInvokeErrorID, path);
-            }
-        }
-
-        private ICopyItem GetCopyItem(IPathNode sourcePathNode)
-        {
-            return sourcePathNode as ICopyItem;
+            else WriteCmdletNotSupportedAtNodeError(path, ProviderCmdlet.CopyItem, CopyItemNotSupportedErrorID);
         }
 
         private IPathValue DoCopyItem(string path, string copyPath, bool recurse, ICopyItem copyItem)
@@ -1276,14 +1269,12 @@ namespace CodeOwls.PowerShell.Provider
 
             if (null == targetNode)
             {
-                WriteError(
-                    new ErrorRecord(
-                        new CopyOrMoveToNonexistentContainerException(copyPath),
-                        CopyItemDestinationContainerDoesNotExistErrorID,
-                        ErrorCategory.WriteError,
-                        copyPath
-                        )
-                    );
+                WriteError(new ErrorRecord(
+                    new CopyOrMoveToNonexistentContainerException(copyPath),
+                    CopyItemDestinationContainerDoesNotExistErrorID,
+                    ErrorCategory.WriteError,
+                    copyPath
+                ));
                 return null;
             }
 
@@ -1291,10 +1282,7 @@ namespace CodeOwls.PowerShell.Provider
         }
 
         protected override object CopyItemDynamicParameters(string path, string destination, bool recurse)
-        {
-            Func<object> a = () => DoCopyItemDynamicParameters(path);
-            return ExecuteAndLog(a, "CopyItemDynamicParameters", path, destination, recurse.ToString());
-        }
+            => ExecuteAndLog(() => DoCopyItemDynamicParameters(path), nameof(CopyItemDynamicParameters), path, destination, recurse.ToString());
 
         private object DoCopyItemDynamicParameters(string path)
         {
@@ -1308,7 +1296,10 @@ namespace CodeOwls.PowerShell.Provider
             return copy.CopyItemParameters;
         }
 
+        #endregion ContainerCmdletProvider: CopyItem
+
         public IContentReader GetContentReader(string path)
+
         {
             Func<IContentReader> a = () => DoGetContentReader(path);
             return ExecuteAndLog(a, "GetContentReader", path);

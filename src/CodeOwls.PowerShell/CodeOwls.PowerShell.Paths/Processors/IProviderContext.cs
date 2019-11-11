@@ -63,7 +63,7 @@ namespace CodeOwls.PowerShell.Provider.PathNodeProcessors
         string Filter { get; }
         IEnumerable<string> Include { get; }
         IEnumerable<string> Exclude { get; }
-        object DynamicParameters { get; }
+        object? DynamicParameters { get; }
         Version PathTopologyVersion { get; }
         string Path { get; }
     }
