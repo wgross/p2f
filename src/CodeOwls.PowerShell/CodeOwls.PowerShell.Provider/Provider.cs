@@ -1238,8 +1238,7 @@ namespace CodeOwls.PowerShell.Provider
 
                 try
                 {
-                    var result = DoCopyItem(sourceItemPath, destinationItemPath, recurse, sourcePathNodeCopy);
-                    WritePathNode(result.destinationContainerPath, result.destinationItemNode);
+                    DoCopyItem(sourceItemPath, destinationItemPath, recurse, sourcePathNodeCopy);
                 }
                 catch (Exception e)
                 {
@@ -1249,7 +1248,7 @@ namespace CodeOwls.PowerShell.Provider
             else WriteCmdletNotSupportedAtNodeError(sourceItemPath, ProviderCmdlet.CopyItem, CopyItemNotSupportedErrorID);
         }
 
-        private (string destinationContainerPath, IPathValue destinationItemNode) DoCopyItem(string sourceItemPath, string destinationItemPath, bool recurse, ICopyItem copyItem)
+        private void DoCopyItem(string sourceItemPath, string destinationItemPath, bool recurse, ICopyItem copyItem)
         {
             var destinationContainerNode = GetNodeFactoryFromPathOrParent(destinationItemPath, out var targetNodeIsParentNode).FirstOrDefault();
 
@@ -1261,17 +1260,13 @@ namespace CodeOwls.PowerShell.Provider
                     ErrorCategory.WriteError,
                     destinationItemPath
                 ));
-                return (null, null);
             }
 
             var sourceItemName = GetChildName(sourceItemPath);
             var destinationItemName = targetNodeIsParentNode ? GetChildName(destinationItemPath) : null;
             var destinationContainerPath = targetNodeIsParentNode ? GetParentPath(destinationItemPath, GetRootPath()) : destinationItemPath;
 
-            return (
-                destinationContainerPath,
-                copyItem.CopyItem(CreateContext(sourceItemPath), sourceItemName, destinationItemName, destinationContainerNode.GetNodeValue(), recurse)
-            );
+            copyItem.CopyItem(CreateContext(sourceItemPath), sourceItemName, destinationItemName, destinationContainerNode.GetNodeValue(), recurse);
         }
 
         protected override object CopyItemDynamicParameters(string path, string destination, bool recurse)
