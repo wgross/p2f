@@ -24,12 +24,14 @@
 
 
 using CodeOwls.PowerShell.Provider.PathNodeProcessors;
+using System.Management.Automation;
 
 namespace CodeOwls.PowerShell.Provider.PathNodes
 {
     public interface IRemoveItem
     {
-        object RemoveItemParameters { get; }        
+        object RemoveItemParameters => new RuntimeDefinedParameterDictionary();
+
         void RemoveItem(IProviderContext providerContext, string path, bool recurse);
     }
 }

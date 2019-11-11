@@ -22,6 +22,7 @@
 
 using CodeOwls.PowerShell.Provider.PathNodeProcessors;
 using System.Collections.Generic;
+using System.Management.Automation;
 
 namespace CodeOwls.PowerShell.Provider.PathNodes
 {
@@ -29,7 +30,7 @@ namespace CodeOwls.PowerShell.Provider.PathNodes
     {
         IEnumerable<string> NewItemTypeNames { get; }
 
-        object NewItemParameters { get; }
+        object NewItemParameters => new RuntimeDefinedParameterDictionary();
 
         IPathValue NewItem(IProviderContext providerContext, string newItemChildPath, string itemTypeName, object newItemValue);
     }

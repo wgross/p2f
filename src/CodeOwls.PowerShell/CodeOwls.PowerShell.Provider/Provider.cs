@@ -470,17 +470,15 @@ namespace CodeOwls.PowerShell.Provider
             }
         }
 
+        #region NavigationCmdletProvider: MakePath
+
         protected override string MakePath(string parent, string child)
-        {
-            Func<string> a = () => DoMakePath(parent, child);
-            return ExecuteAndLog(a, "MakePath", parent, child);
-        }
+            => ExecuteAndLog(() => DoMakePath(parent, child), nameof(MakePath), parent, child);
 
         private string DoMakePath(string parent, string child)
-        {
-            var newPath = NormalizeWhacks(base.MakePath(parent, child));
-            return newPath;
-        }
+            => NormalizeWhacks(base.MakePath(parent, child));
+
+        #endregion NavigationCmdletProvider: MakePath
 
         protected override string GetParentPath(string path, string root)
         {
@@ -806,58 +804,10 @@ namespace CodeOwls.PowerShell.Provider
         }
 
         private void GetChildItems(string path, IPathNode pathNode, bool recurse)
-        {
-            var context = CreateContext(path, recurse);
-            var children = pathNode.GetNodeChildren(context);
-            WriteChildItem(path, recurse, children);
-        }
-
-        #endregion ContainerCmdletProvider : GetChildItems
-
-        private void WriteChildItem(string path, bool recurse, IEnumerable<IPathNode> children)
-        {
-            if (null == children)
-            {
-                return;
-            }
-
-            children.ToList().ForEach(
-                f =>
-                    {
-                        try
-                        {
-                            var i = f.GetNodeValue();
-                            if (null == i)
-                            {
-                                return;
-                            }
-                            var childPath = MakePath(path, i.Name);
-                            WritePathNode(childPath, f);
-                            if (recurse)
-                            {
-                                var context = CreateContext(path, recurse);
-                                var kids = f.GetNodeChildren(context);
-                                WriteChildItem(childPath, recurse, kids);
-                            }
-                        }
-                        catch (PipelineStoppedException)
-                        {
-                            throw;
-                        }
-                        catch (Exception e)
-                        {
-                            WriteDebug("An exception was raised while writing child items to the pipeline: " + e.ToString());
-                        }
-                    });
-        }
-
-        private bool IsRootPath(string path) => string.IsNullOrEmpty(Regex.Replace(path.ToLower(), @"[a-z0-9_]+:[/\\]?", ""));
+            => WriteChildItem(path, recurse, pathNode.GetNodeChildren(CreateContext(path, recurse)));
 
         protected override object GetChildItemsDynamicParameters(string path, bool recurse)
-        {
-            Func<object> a = () => DoGetChildItemsDynamicParameters(path);
-            return ExecuteAndLog(a, "GetChildItemsDynamicParameters", path, recurse.ToString());
-        }
+            => ExecuteAndLog(() => DoGetChildItemsDynamicParameters(path), nameof(GetChildItemsDynamicParameters), path, recurse.ToString());
 
         private object DoGetChildItemsDynamicParameters(string path)
         {
@@ -869,6 +819,46 @@ namespace CodeOwls.PowerShell.Provider
 
             return pathNode.GetNodeChildrenParameters;
         }
+
+        private void WriteChildItem(string path, bool recurse, IEnumerable<IPathNode> children)
+        {
+            if (null == children)
+            {
+                return;
+            }
+
+            children.ToList().ForEach(f =>
+            {
+                try
+                {
+                    var i = f.GetNodeValue();
+                    if (null == i)
+                    {
+                        return;
+                    }
+                    var childPath = MakePath(path, i.Name);
+                    WritePathNode(childPath, f);
+                    if (recurse)
+                    {
+                        var context = CreateContext(path, recurse);
+                        var kids = f.GetNodeChildren(context);
+                        WriteChildItem(childPath, recurse, kids);
+                    }
+                }
+                catch (PipelineStoppedException)
+                {
+                    throw;
+                }
+                catch (Exception e)
+                {
+                    WriteDebug("An exception was raised while writing child items to the pipeline: " + e.ToString());
+                }
+            });
+        }
+
+        #endregion ContainerCmdletProvider : GetChildItems
+
+        private bool IsRootPath(string path) => string.IsNullOrEmpty(Regex.Replace(path.ToLower(), @"[a-z0-9_]+:[/\\]?", ""));
 
         protected override void GetChildNames(string path, ReturnContainers returnContainers)
         {
@@ -1197,10 +1187,7 @@ namespace CodeOwls.PowerShell.Provider
         #endregion Resolve path to responsible node class
 
         protected override bool HasChildItems(string path)
-        {
-            Func<bool> a = () => DoHasChildItems(path);
-            return ExecuteAndLog(a, "HasChildItems", path);
-        }
+            => ExecuteAndLog(() => DoHasChildItems(path), nameof(HasChildItems), path);
 
         private bool DoHasChildItems(string path)
         {
@@ -1222,63 +1209,69 @@ namespace CodeOwls.PowerShell.Provider
         protected override void CopyItem(string path, string copyPath, bool recurse)
             => ExecuteAndLog(() => DoCopyItem(path, copyPath, recurse), nameof(CopyItem), path, copyPath, recurse.ToString());
 
-        private void DoCopyItem(string path, string copyPath, bool recurse)
+        private void DoCopyItem(string sourceItemPath, string destinationItemPath, bool recurse)
         {
-            var sourceNodes = GetNodeFactoryFromPath(path).ToList();
+            var sourceNodes = GetNodeFactoryFromPath(sourceItemPath).ToList();
             if (sourceNodes.Any())
             {
-                sourceNodes.ToList().ForEach(n => CopyItem(path, n, copyPath, recurse));
+                sourceNodes.ToList().ForEach(n => CopyItem(sourceItemPath, n, destinationItemPath, recurse));
             }
             else
             {
                 WriteError(new ErrorRecord(
-                    new ItemNotFoundException(path),
+                    new ItemNotFoundException(sourceItemPath),
                     CopyItemSourceDoesNotExistErrorID,
                     ErrorCategory.ObjectNotFound,
-                    path
+                    sourceItemPath
                 ));
             }
         }
 
-        private void CopyItem(string path, IPathNode sourcePathNode, string copyPath, bool recurse)
+        private void CopyItem(string sourceItemPath, IPathNode sourcePathNode, string destinationItemPath, bool recurse)
         {
-            if (sourcePathNode is ICopyItem copyItem)
+            if (sourcePathNode is ICopyItem sourcePathNodeCopy)
             {
-                if (!ShouldProcess(path, ProviderCmdlet.CopyItem))
+                if (!ShouldProcess(sourceItemPath, ProviderCmdlet.CopyItem))
                 {
                     return;
                 }
 
                 try
                 {
-                    WritePathNode(copyPath, DoCopyItem(path, copyPath, recurse, copyItem));
+                    var result = DoCopyItem(sourceItemPath, destinationItemPath, recurse, sourcePathNodeCopy);
+                    WritePathNode(result.destinationContainerPath, result.destinationItemNode);
                 }
                 catch (Exception e)
                 {
-                    WriteGeneralCmdletError(e, CopyItemInvokeErrorID, path);
+                    WriteGeneralCmdletError(e, CopyItemInvokeErrorID, sourceItemPath);
                 }
             }
-            else WriteCmdletNotSupportedAtNodeError(path, ProviderCmdlet.CopyItem, CopyItemNotSupportedErrorID);
+            else WriteCmdletNotSupportedAtNodeError(sourceItemPath, ProviderCmdlet.CopyItem, CopyItemNotSupportedErrorID);
         }
 
-        private IPathValue DoCopyItem(string path, string copyPath, bool recurse, ICopyItem copyItem)
+        private (string destinationContainerPath, IPathValue destinationItemNode) DoCopyItem(string sourceItemPath, string destinationItemPath, bool recurse, ICopyItem copyItem)
         {
-            var targetNode = GetNodeFactoryFromPathOrParent(copyPath, out var targetNodeIsParentNode).FirstOrDefault();
-            var sourceName = GetChildName(path);
-            var copyName = targetNodeIsParentNode ? GetChildName(copyPath) : null;
+            var destinationContainerNode = GetNodeFactoryFromPathOrParent(destinationItemPath, out var targetNodeIsParentNode).FirstOrDefault();
 
-            if (null == targetNode)
+            if (destinationContainerNode is null)
             {
                 WriteError(new ErrorRecord(
-                    new CopyOrMoveToNonexistentContainerException(copyPath),
+                    new CopyOrMoveToNonexistentContainerException(destinationItemPath),
                     CopyItemDestinationContainerDoesNotExistErrorID,
                     ErrorCategory.WriteError,
-                    copyPath
+                    destinationItemPath
                 ));
-                return null;
+                return (null, null);
             }
 
-            return copyItem.CopyItem(CreateContext(path), sourceName, copyName, targetNode.GetNodeValue(), recurse);
+            var sourceItemName = GetChildName(sourceItemPath);
+            var destinationItemName = targetNodeIsParentNode ? GetChildName(destinationItemPath) : null;
+            var destinationContainerPath = targetNodeIsParentNode ? GetParentPath(destinationItemPath, GetRootPath()) : destinationItemPath;
+
+            return (
+                destinationContainerPath,
+                copyItem.CopyItem(CreateContext(sourceItemPath), sourceItemName, destinationItemName, destinationContainerNode.GetNodeValue(), recurse)
+            );
         }
 
         protected override object CopyItemDynamicParameters(string path, string destination, bool recurse)

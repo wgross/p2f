@@ -22,6 +22,7 @@
 
 using CodeOwls.PowerShell.Provider.PathNodeProcessors;
 using System.Collections.Generic;
+using System.Management.Automation;
 
 namespace CodeOwls.PowerShell.Provider.PathNodes
 {
@@ -33,7 +34,7 @@ namespace CodeOwls.PowerShell.Provider.PathNodes
 
         IEnumerable<IPathNode> GetNodeChildren(IProviderContext providerContext);
 
-        object GetNodeChildrenParameters { get; }
+        object GetNodeChildrenParameters => new RuntimeDefinedParameterDictionary();
 
         string Name { get; }
 
