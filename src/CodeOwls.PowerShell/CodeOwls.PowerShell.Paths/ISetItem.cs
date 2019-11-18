@@ -24,12 +24,14 @@
 
 
 using CodeOwls.PowerShell.Provider.PathNodeProcessors;
+using System.Management.Automation;
 
 namespace CodeOwls.PowerShell.Provider.PathNodes
 {
     public interface ISetItem
     {
-        object SetItemParameters { get; }
+        object SetItemParameters => new RuntimeDefinedParameterDictionary();
+
         IPathValue SetItem(IProviderContext providerContext, string path, object value);
     }
 }

@@ -24,12 +24,14 @@
 
 
 using CodeOwls.PowerShell.Provider.PathNodeProcessors;
+using System.Management.Automation;
 
 namespace CodeOwls.PowerShell.Provider.PathNodes
 {
     public interface IRenameItem
     {
-        object RenameItemParameters { get; }
+        object RenameItemParameters => new RuntimeDefinedParameterDictionary();
+
         void RenameItem(IProviderContext providerContext, string path, string newName);
     }
 }

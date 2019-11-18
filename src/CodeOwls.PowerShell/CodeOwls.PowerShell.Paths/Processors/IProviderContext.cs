@@ -33,7 +33,7 @@ namespace CodeOwls.PowerShell.Provider.PathNodeProcessors
     
     public interface IProviderContext
     {        
-        PSDriveInfo Drive { get; }
+        PSDriveInfo? Drive { get; }
         string GetResourceString(string baseName, string resourceId);
         void ThrowTerminatingError(ErrorRecord errorRecord);
         bool ShouldProcess(string target);
@@ -63,7 +63,7 @@ namespace CodeOwls.PowerShell.Provider.PathNodeProcessors
         string Filter { get; }
         IEnumerable<string> Include { get; }
         IEnumerable<string> Exclude { get; }
-        object DynamicParameters { get; }
+        object? DynamicParameters { get; }
         Version PathTopologyVersion { get; }
         string Path { get; }
     }
