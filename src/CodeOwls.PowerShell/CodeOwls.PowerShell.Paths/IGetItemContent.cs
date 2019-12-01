@@ -1,15 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using CodeOwls.PowerShell.Provider.PathNodeProcessors;
+using System.Management.Automation;
 using System.Management.Automation.Provider;
-using System.Text;
-using CodeOwls.PowerShell.Provider.PathNodeProcessors;
 
 namespace CodeOwls.PowerShell.Paths
 {
     public interface IGetItemContent
     {
         IContentReader GetContentReader(IProviderContext providerContext);
-        object GetContentReaderDynamicParameters(IProviderContext providerContext);
+
+        object GetContentReaderDynamicParameters(IProviderContext providerContext)
+            => new RuntimeDefinedParameterDictionary();
     }
 }
