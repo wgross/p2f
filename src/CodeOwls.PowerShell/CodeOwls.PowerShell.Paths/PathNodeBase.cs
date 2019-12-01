@@ -45,7 +45,7 @@ namespace CodeOwls.PowerShell.Provider.PathNodes
             }
         }
 
-        public abstract IPathValue GetNodeValue();
+        public abstract IItemProvider GetItemProvider();
         public virtual object GetNodeChildrenParameters { get { return null; } }
         public virtual IEnumerable<IPathNode> GetNodeChildren(IProviderContext providerContext)
         {
@@ -64,11 +64,11 @@ namespace CodeOwls.PowerShell.Provider.PathNodes
                 bool canRemove = null != this as IRemoveItem;
                 bool canMove = canCopy && canRemove;
                 var d = " ";
-                var containerEncoded = GetNodeValue().IsCollection ? "d" : d;
+                var containerEncoded = GetItemProvider().IsContainer ? "d" : d;
                 var newEncoded = null != this as INewItem ? "+" : d;
                 var removeEncoded = null != this as IRemoveItem ? "~" : d;
 
-                var getEncoded = null != GetNodeValue() ? "<" : d;
+                var getEncoded = null != GetItemProvider() ? "<" : d;
                 var setEncoded = null != this as ISetItem ? ">" : d;
                 var clearEncoded = null != this as IClearItem ? "0" : d;
 

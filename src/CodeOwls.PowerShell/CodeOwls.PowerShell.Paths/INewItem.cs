@@ -32,6 +32,6 @@ namespace CodeOwls.PowerShell.Provider.PathNodes
 
         object NewItemParameters => new RuntimeDefinedParameterDictionary();
 
-        IPathValue NewItem(IProviderContext providerContext, string newItemChildPath, string itemTypeName, object newItemValue);
+        IItemProvider NewItem(IProviderContext providerContext, string newItemChildPath, string itemTypeName, object newItemValue);
     }
 }

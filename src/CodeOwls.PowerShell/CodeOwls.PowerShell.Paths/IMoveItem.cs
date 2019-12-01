@@ -7,6 +7,6 @@ namespace CodeOwls.PowerShell.Provider.PathNodes
     {
         object MoveItemParameters => new RuntimeDefinedParameterDictionary();
 
-        IPathValue MoveItem(IProviderContext providerContext, string path, string movePath, IPathValue destinationContainer);
+        IItemProvider MoveItem(IProviderContext providerContext, string path, string movePath, IItemProvider destinationContainer);
     }
 }

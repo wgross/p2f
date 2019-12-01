@@ -26,11 +26,15 @@ using System.Management.Automation;
 
 namespace CodeOwls.PowerShell.Provider.PathNodes
 {
+    /// <summary>
+    /// A powershell provider path is mapped to a <see cref="IPathNode"/>.
+    /// The path node resolves a given child name to a child path node.
+    /// </summary>
     public interface IPathNode
     {
-        IEnumerable<IPathNode> Resolve(IProviderContext providerContext, string name);
+        IEnumerable<IPathNode> Resolve(IProviderContext providerContext, string childName);
 
-        IPathValue GetNodeValue();
+        IItemProvider GetItemProvider();
 
         IEnumerable<IPathNode> GetNodeChildren(IProviderContext providerContext);
 

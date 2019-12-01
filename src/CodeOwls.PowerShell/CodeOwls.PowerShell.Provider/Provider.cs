@@ -85,7 +85,7 @@ namespace CodeOwls.PowerShell.Provider
                 return PSDriveInfo.Root + NormalizeWhacks(path.Substring(PSDriveInfo.Root.Length));
             }
 
-            return path.Replace("/", "\\");
+            return path.Replace("/", "\\").TrimEnd('\\');
         }
 
         private string EnsurePathIsRooted(string path)
@@ -144,7 +144,7 @@ namespace CodeOwls.PowerShell.Provider
             => GetNodeFactoryFromPath(path).ToList().ForEach(f => SetProperty(path, f, propertyValue));
 
         private void SetProperty(string path, IPathNode factory, PSObject propertyValue)
-            => factory.GetNodeValue().SetItemProperties(propertyValue.Properties);
+            => factory.GetItemProvider().SetItemProperties(propertyValue.Properties);
 
         public object SetPropertyDynamicParameters(string path, PSObject propertyValue) => null;
 
@@ -319,7 +319,7 @@ namespace CodeOwls.PowerShell.Provider
 
         private static (bool created, PSObject psObject, bool isCollection) TryMakePsObjectFromPathNode(IPathNode pathNode, IEnumerable<string> propertyNames)
         {
-            var pathNodeValue = pathNode.GetNodeValue();
+            var pathNodeValue = pathNode.GetItemProvider();
             if (pathNodeValue is null)
             {
                 return (false, null, false);
@@ -327,14 +327,14 @@ namespace CodeOwls.PowerShell.Provider
 
             if (propertyNames is null || !propertyNames.Any())
             {
-                var psObject = PSObject.AsPSObject(pathNodeValue.Item);
+                var psObject = PSObject.AsPSObject(pathNodeValue.GetItem());
                 psObject.Properties.Add(new PSNoteProperty(ItemModePropertyName, pathNode.ItemMode));
                 pathNodeValue.GetItemProperties(propertyNames: null).Aggregate(psObject.Properties, (psoProps, p) =>
                 {
                     psoProps.Add(p);
                     return psoProps;
                 });
-                return (true, psObject, pathNodeValue.IsCollection);
+                return (true, psObject, pathNodeValue.IsContainer);
             }
             else
             {
@@ -344,7 +344,7 @@ namespace CodeOwls.PowerShell.Provider
                     psoProps.Add(p);
                     return psoProps;
                 });
-                return (true, psObject, pathNodeValue.IsCollection);
+                return (true, psObject, pathNodeValue.IsContainer);
             }
         }
 
@@ -386,14 +386,14 @@ namespace CodeOwls.PowerShell.Provider
                 return false;
             }
 
-            var value = node.GetNodeValue();
+            var value = node.GetItemProvider();
 
             if (null == value)
             {
                 return false;
             }
 
-            return value.IsCollection;
+            return value.IsContainer;
         }
 
         #endregion NavigationCmdletProvider: IsItemContainer
@@ -463,7 +463,7 @@ namespace CodeOwls.PowerShell.Provider
                 return;
             }
 
-            var movedItem = moveItem.MoveItem(CreateContext(path), sourceName, finalDestinationPath, targetNode.GetNodeValue());
+            var movedItem = moveItem.MoveItem(CreateContext(path), sourceName, finalDestinationPath, targetNode.GetItemProvider());
             if (null != movedItem)
             {
                 WritePathNode(destinationPath, movedItem);
@@ -827,21 +827,21 @@ namespace CodeOwls.PowerShell.Provider
                 return;
             }
 
-            children.ToList().ForEach(f =>
+            children.ToList().ForEach(pathNode =>
             {
                 try
                 {
-                    var i = f.GetNodeValue();
+                    var i = pathNode.GetItemProvider();
                     if (null == i)
                     {
                         return;
                     }
                     var childPath = MakePath(path, i.Name);
-                    WritePathNode(childPath, f);
+                    WritePathNode(childPath, pathNode);
                     if (recurse)
                     {
                         var context = CreateContext(path, recurse);
-                        var kids = f.GetNodeChildren(context);
+                        var kids = pathNode.GetNodeChildren(context);
                         WriteChildItem(childPath, recurse, kids);
                     }
                 }
@@ -880,15 +880,15 @@ namespace CodeOwls.PowerShell.Provider
         private void GetChildNames(string path, IPathNode pathNode, ReturnContainers returnContainers)
         {
             pathNode.GetNodeChildren(CreateContext(path)).ToList().ForEach(
-                f =>
+                pathNode =>
+                {
+                    var i = pathNode.GetItemProvider();
+                    if (null == i)
                     {
-                        var i = f.GetNodeValue();
-                        if (null == i)
-                        {
-                            return;
-                        }
-                        WriteItemObject(i.Name, path + "\\" + i.Name, i.IsCollection);
-                    });
+                        return;
+                    }
+                    WriteItemObject(i.Name, path + "\\" + i.Name, i.IsContainer);
+                });
         }
 
         protected override object GetChildNamesDynamicParameters(string path)
@@ -1061,11 +1061,11 @@ namespace CodeOwls.PowerShell.Provider
             }
         }
 
-        private void WritePathNode(string nodeContainerPath, IPathValue value)
+        private void WritePathNode(string nodeContainerPath, IItemProvider value)
         {
             if (null != value)
             {
-                WriteItemObject(value.Item, MakePath(nodeContainerPath, value.Name), value.IsCollection);
+                WriteItemObject(value.GetItem(), MakePath(nodeContainerPath, value.Name), value.IsContainer);
             }
         }
 
@@ -1266,7 +1266,7 @@ namespace CodeOwls.PowerShell.Provider
             var destinationItemName = targetNodeIsParentNode ? GetChildName(destinationItemPath) : null;
             var destinationContainerPath = targetNodeIsParentNode ? GetParentPath(destinationItemPath, GetRootPath()) : destinationItemPath;
 
-            copyItem.CopyItem(CreateContext(sourceItemPath), sourceItemName, destinationItemName, destinationContainerNode.GetNodeValue(), recurse);
+            copyItem.CopyItem(CreateContext(sourceItemPath), sourceItemName, destinationItemName, destinationContainerNode.GetItemProvider(), recurse);
         }
 
         protected override object CopyItemDynamicParameters(string path, string destination, bool recurse)
