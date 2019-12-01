@@ -319,32 +319,39 @@ namespace CodeOwls.PowerShell.Provider
 
         private static (bool created, PSObject psObject, bool isCollection) TryMakePsObjectFromPathNode(IPathNode pathNode, IEnumerable<string> propertyNames)
         {
-            var pathNodeValue = pathNode.GetItemProvider();
-            if (pathNodeValue is null)
+            var itemProvider = pathNode.GetItemProvider();
+            if (itemProvider is null)
             {
                 return (false, null, false);
             }
 
             if (propertyNames is null || !propertyNames.Any())
             {
-                var psObject = PSObject.AsPSObject(pathNodeValue.GetItem());
+                var psObject = PSObject.AsPSObject(itemProvider.GetItem());
                 psObject.Properties.Add(new PSNoteProperty(ItemModePropertyName, pathNode.ItemMode));
-                pathNodeValue.GetItemProperties(propertyNames: null).Aggregate(psObject.Properties, (psoProps, p) =>
-                {
-                    psoProps.Add(p);
-                    return psoProps;
-                });
-                return (true, psObject, pathNodeValue.IsContainer);
+
+                itemProvider
+                    .GetItemProperties(propertyNames)
+                    .Aggregate(psObject.Properties, (psoProps, p) =>
+                    {
+                        psoProps.Add(p);
+                        return psoProps;
+                    });
+                return (true, psObject, itemProvider.IsContainer);
             }
             else
             {
                 var psObject = new PSObject();
-                pathNodeValue.GetItemProperties(propertyNames).Aggregate(psObject.Properties, (psoProps, p) =>
-                {
-                    psoProps.Add(p);
-                    return psoProps;
-                });
-                return (true, psObject, pathNodeValue.IsContainer);
+
+                itemProvider
+                    .GetItemProperties(propertyNames)
+                    .Aggregate(psObject.Properties, (psoProps, p) =>
+                    {
+                        psoProps.Add(p);
+                        return psoProps;
+                    });
+
+                return (true, psObject, itemProvider.IsContainer);
             }
         }
 
@@ -1051,7 +1058,7 @@ namespace CodeOwls.PowerShell.Provider
 
         private void WritePathNode(string nodeContainerPath, IPathNode factory)
         {
-            var pso = TryMakePsObjectFromPathNode(factory, propertyNames: null);
+            var pso = TryMakePsObjectFromPathNode(factory, propertyNames: Enumerable.Empty<string>());
 
             //nodeContainerPath = SessionState.Path.GetUnresolvedProviderPathFromPSPath(nodeContainerPath);
 
