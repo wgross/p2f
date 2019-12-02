@@ -52,15 +52,15 @@ namespace CodeOwls.PowerShell.Provider.PathNodes
                 yield break;
             }
 
-            var nodeItem = thisPathValue.GetItem();
-            var propDescs = TypeDescriptor.GetProperties(nodeItem);
+            var thisItem = thisPathValue.GetItem();
+            var propDescs = TypeDescriptor.GetProperties(thisItem);
             var props = (from PropertyDescriptor prop in propDescs
                          where (propertyNames.Contains(prop.Name, StringComparer.InvariantCultureIgnoreCase))
                          select prop);
 
             foreach (var p in props)
             {
-                var iv = p.GetValue(thisPathValue);
+                var iv = p.GetValue(thisItem);
                 if (null != iv)
                 {
                     yield return new PSNoteProperty(p.Name, iv);
