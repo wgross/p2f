@@ -8,3 +8,4 @@ _ReSharper.*
 bin
 obj
 _local
+/src/.vs/ProviderFramework/v16

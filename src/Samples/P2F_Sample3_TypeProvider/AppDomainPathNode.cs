@@ -12,9 +12,9 @@ namespace ProviderFramework_3_TypeProvider
     class AppDomainPathNode : PathNodeBase, INewItem
     {
         #region unchanged code from previous version
-        public override IPathValue GetNodeValue()
+        public override IItemProvider GetItemProvider()
         {
-            return new ContainerPathValue( AppDomain.CurrentDomain, Name );
+            return new ContainerItemProvider( AppDomain.CurrentDomain, Name );
         }
 
         public override string Name
@@ -68,7 +68,7 @@ namespace ProviderFramework_3_TypeProvider
         /// <param name="itemTypeName">the type of the item to create; unused in this value</param>
         /// <param name="newItemValue">the value of the new item to create; unused in this value</param>
         /// <returns></returns>
-        public IPathValue NewItem(IProviderContext providerContext, string path, string itemTypeName, object newItemValue)
+        public IItemProvider NewItem(IProviderContext providerContext, string path, string itemTypeName, object newItemValue)
         {
             IEnumerable<PSObject> results = new PSObject[]{};
 
@@ -111,7 +111,7 @@ namespace ProviderFramework_3_TypeProvider
             // to maintain consistency I find it easier to leverage the value factory classes rather than return 
             //  an IPathValue instance directly.
             var nodeFactory = new AssemblyPathNode(assembly);
-            return nodeFactory.GetNodeValue();
+            return nodeFactory.GetItemProvider();
         }
     }
 }
