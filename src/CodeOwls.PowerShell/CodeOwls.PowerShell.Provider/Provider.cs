@@ -24,7 +24,6 @@ using CodeOwls.PowerShell.Paths;
 using CodeOwls.PowerShell.Paths.Exceptions;
 using CodeOwls.PowerShell.Paths.Processors;
 using CodeOwls.PowerShell.Provider.Attributes;
-using CodeOwls.PowerShell.Provider.PathNodeProcessors;
 using CodeOwls.PowerShell.Provider.PathNodes;
 using System;
 using System.Collections.Generic;
@@ -42,7 +41,7 @@ namespace CodeOwls.PowerShell.Provider
 {
     //[CmdletProvider("YourProviderName", ProviderCapabilities.ShouldProcess)]
 
-    public abstract class Provider : NavigationCmdletProvider,
+    public abstract partial class Provider : NavigationCmdletProvider,
         IPropertyCmdletProvider,
         ICmdletProviderSupportsHelp,
         IContentCmdletProvider
@@ -102,21 +101,6 @@ namespace CodeOwls.PowerShell.Provider
 
             return path;
         }
-
-        #region Create provider contexts for calling node methods
-
-        protected virtual IProviderContext CreateContext(string path) => CreateContext(path, false, true);
-
-        protected virtual IProviderContext CreateContext(string path, bool recurse) => CreateContext(path, recurse, false);
-
-        protected virtual IProviderContext CreateContext(string path, bool recurse, bool resolveFinalNodeFilterItems)
-        {
-            var context = new ProviderContext(this, path, PSDriveInfo, PathResolver, DynamicParameters, recurse);
-            context.ResolveFinalNodeFilterItems = resolveFinalNodeFilterItems;
-            return context;
-        }
-
-        #endregion Create provider contexts for calling node methods
 
         #region Implementation of IPropertyCmdletProvider
 
@@ -353,13 +337,6 @@ namespace CodeOwls.PowerShell.Provider
 
                 return (true, psObject, itemProvider.IsContainer);
             }
-        }
-
-        private void WriteCmdletNotSupportedAtNodeError(string path, string cmdlet, string errorId)
-        {
-            var exception = new NodeDoesNotSupportCmdletException(path, cmdlet);
-            var error = new ErrorRecord(exception, errorId, ErrorCategory.NotImplemented, path);
-            WriteError(error);
         }
 
         private void WriteGeneralCmdletError(Exception exception, string errorId, string path)
@@ -1146,53 +1123,6 @@ namespace CodeOwls.PowerShell.Provider
             return remove.RemoveItemParameters;
         }
 
-        #region Resolve path to responsible node class
-
-        private IPathNode GetFirstNodeFactoryFromPath(string path) => GetNodeFactoryFromPath(path).FirstOrDefault();
-
-        private IEnumerable<IPathNode> GetNodeFactoryFromPath(string path) => GetNodeFactoryFromPath(path, true);
-
-        private IEnumerable<IPathNode> GetNodeFactoryFromPath(string path, bool resolveFinalFilter)
-        {
-            IEnumerable<IPathNode> factories = ResolvePath(path);
-
-            if (resolveFinalFilter && !string.IsNullOrEmpty(Filter))
-            {
-                factories = factories.First().Resolve(CreateContext(path), null);
-            }
-
-            return factories;
-        }
-
-        private IEnumerable<IPathNode> GetNodeFactoryFromPathOrParent(string path, out bool isParentOfPath)
-        {
-            isParentOfPath = false;
-            var nodes = ResolvePath(path);
-
-            if (!nodes.Any())
-            {
-                path = GetParentPath(path, null);
-                nodes = ResolvePath(path);
-
-                if (null == nodes || !nodes.Any())
-                {
-                    //refactor: return null;
-                    return Enumerable.Empty<IPathNode>();
-                }
-
-                isParentOfPath = true;
-            }
-
-            if (!string.IsNullOrEmpty(Filter))
-            {
-                nodes = nodes.First().Resolve(CreateContext(null), null);
-            }
-
-            return nodes;
-        }
-
-        #endregion Resolve path to responsible node class
-
         protected override bool HasChildItems(string path)
             => ExecuteAndLog(() => DoHasChildItems(path), nameof(HasChildItems), path);
 
@@ -1446,83 +1376,5 @@ namespace CodeOwls.PowerShell.Provider
 
             return clear.ClearContentDynamicParameters(CreateContext(path));
         }
-
-        protected void LogDebug(string format, params object[] args)
-        {
-            try
-            {
-                WriteDebug(String.Format(format, args));
-            }
-            catch
-            {
-            }
-        }
-
-        private void ExecuteAndLog(Action action, string methodName, params string[] args)
-        {
-            var argsList = String.Join(", ", args);
-            try
-            {
-                LogDebug(">> {0}([{1}])", methodName, argsList);
-                action();
-            }
-            catch (Exception e)
-            {
-                LogDebug("!! {0}([{1}]) EXCEPTION: {2}", methodName, argsList, e.ToString());
-                throw;
-            }
-            finally
-            {
-                LogDebug("<< {0}([{1}])", methodName, argsList);
-            }
-        }
-
-        private T ExecuteAndLog<T>(Func<T> action, string methodName, params string[] args)
-        {
-            var argsList = String.Join(", ", args);
-            try
-            {
-                LogDebug(">> {0}([{1}])", methodName, argsList);
-                return action();
-            }
-            catch (Exception e)
-            {
-                LogDebug("!! {0}([{1}]) EXCEPTION: {2}", methodName, argsList, e.ToString());
-                throw;
-            }
-            finally
-            {
-                LogDebug("<< {0}([{1}])", methodName, argsList);
-            }
-        }
-
-        private const string NotSupportedCmdletHelpID = "__NotSupported__";
-        private const string RemoveItemTargetDoesNotExistErrorID = "RemoveItem.TargetDoesNotExist";
-        private const string CopyItemSourceDoesNotExistErrorID = "CopyItem.SourceDoesNotExist";
-        private const string SetItemTargetDoesNotExistErrorID = "SetItem.TargetDoesNotExist";
-        private const string GetContentTargetDoesNotExistErrorID = "GetContent.TargetDoesNotExist";
-        private const string SetContentTargetDoesNotExistErrorID = "SetContent.TargetDoesNotExist";
-        private const string RenameItemNotsupportedErrorID = "RenameItem.NotSupported";
-        private const string RenameItemInvokeErrorID = "RenameItem.Invoke";
-        private const string NewItemNotSupportedErrorID = "NewItem.NotSupported";
-        private const string NewItemInvokeErrorID = "NewItem.Invoke";
-        private const string ItemModePropertyName = "SSItemMode";
-        private const string RemoveItemNotSupportedErrorID = "RemoveItem.NotSupported";
-        private const string RemoveItemInvokeErrorID = "RemoveItem.Invoke";
-        private const string CopyItemNotSupportedErrorID = "CopyItem.NotSupported";
-        private const string CopyItemInvokeErrorID = "CopyItem.Invoke";
-        private const string CopyItemDestinationContainerDoesNotExistErrorID = "CopyItem.DestinationContainerDoesNotExist";
-        private const string ClearItemPropertyNotsupportedErrorID = "ClearItemProperty.NotSupported";
-        private const string GetHelpCustomMamlErrorID = "GetHelp.CustomMaml";
-        private const string GetItemInvokeErrorID = "GetItem.Invoke";
-        private const string SetItemNotSupportedErrorID = "SetItem.NotSupported";
-        private const string SetItemInvokeErrorID = "SetItem.Invoke";
-        private const string ClearItemNotSupportedErrorID = "ClearItem.NotSupported";
-        private const string ClearItemInvokeErrorID = "ClearItem.Invoke";
-        private const string InvokeItemNotSupportedErrorID = "InvokeItem.NotSupported";
-        private const string InvokeItemInvokeErrorID = "InvokeItem.Invoke";
-        private const string MoveItemNotSupportedErrorID = "MoveItem.NotSupported";
-        private const string MoveItemInvokeErrorID = "MoveItem.Invoke";
-        private const string ShouldContinuePrompt = "Are you sure?";
     }
 }
