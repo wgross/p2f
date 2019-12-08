@@ -1,7 +1,7 @@
 ﻿using CodeOwls.PowerShell.Provider.PathNodeProcessors;
 using System.Management.Automation;
 
-namespace CodeOwls.PowerShell.Provider.PathNodes
+namespace CodeOwls.PowerShell.Provider.Paths
 {
     public interface IMoveItem
     {

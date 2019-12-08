@@ -26,7 +26,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Management.Automation;
 
-namespace CodeOwls.PowerShell.Provider.PathNodes
+namespace CodeOwls.PowerShell.Provider.Paths
 {
     /// <summary>
     /// Provides an item for output to the powershell processing pipe.

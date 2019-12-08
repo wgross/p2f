@@ -5,7 +5,7 @@ using System.Linq;
 using System.Management.Automation;
 using System.Reflection;
 using CodeOwls.PowerShell.Provider.PathNodeProcessors;
-using CodeOwls.PowerShell.Provider.PathNodes;
+using CodeOwls.PowerShell.Provider.Paths;
 
 namespace ProviderFramework_3_TypeProvider
 {

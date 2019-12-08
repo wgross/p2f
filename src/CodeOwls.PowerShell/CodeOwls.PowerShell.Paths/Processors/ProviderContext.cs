@@ -21,7 +21,7 @@
 */
 
 using CodeOwls.PowerShell.Paths.Processors;
-using CodeOwls.PowerShell.Provider.PathNodes;
+using CodeOwls.PowerShell.Provider.Paths;
 using System;
 using System.Collections.Generic;
 using System.Linq;

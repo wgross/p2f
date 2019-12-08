@@ -1,5 +1,4 @@
-﻿using CodeOwls.PowerShell.PathNodes;
-using CodeOwls.PowerShell.Paths;
+﻿using CodeOwls.PowerShell.Paths;
 using CodeOwls.PowerShell.Paths.Exceptions;
 using System.Linq;
 using System.Management.Automation;

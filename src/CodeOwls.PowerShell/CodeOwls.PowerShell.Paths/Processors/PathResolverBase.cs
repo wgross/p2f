@@ -27,7 +27,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using CodeOwls.PowerShell.Provider.PathNodeProcessors;
-using CodeOwls.PowerShell.Provider.PathNodes;
+using CodeOwls.PowerShell.Provider.Paths;
 
 namespace CodeOwls.PowerShell.Paths.Processors
 {

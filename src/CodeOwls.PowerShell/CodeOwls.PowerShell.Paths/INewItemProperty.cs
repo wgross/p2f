@@ -1,7 +1,7 @@
 ﻿using CodeOwls.PowerShell.Provider.PathNodeProcessors;
 using System.Management.Automation;
 
-namespace CodeOwls.PowerShell.PathNodes
+namespace CodeOwls.PowerShell.Paths
 {
     public interface INewItemProperty
     {
