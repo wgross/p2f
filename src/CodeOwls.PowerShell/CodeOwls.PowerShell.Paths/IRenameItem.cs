@@ -26,7 +26,7 @@
 using CodeOwls.PowerShell.Provider.PathNodeProcessors;
 using System.Management.Automation;
 
-namespace CodeOwls.PowerShell.Provider.Paths
+namespace CodeOwls.PowerShell.Paths
 {
     public interface IRenameItem
     {

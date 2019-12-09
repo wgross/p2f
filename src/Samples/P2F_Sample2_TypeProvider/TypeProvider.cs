@@ -1,6 +1,6 @@
-﻿using CodeOwls.PowerShell.Paths.Processors;
+﻿using CodeOwls.PowerShell.Paths;
+using CodeOwls.PowerShell.Paths.Processors;
 using CodeOwls.PowerShell.Provider;
-using CodeOwls.PowerShell.Provider.Paths;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;

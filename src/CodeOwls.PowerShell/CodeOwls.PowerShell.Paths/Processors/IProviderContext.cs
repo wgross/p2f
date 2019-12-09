@@ -20,7 +20,7 @@
 	IN THE SOFTWARE.
 */
 
-using CodeOwls.PowerShell.Provider.Paths;
+using CodeOwls.PowerShell.Paths;
 using System;
 using System.Collections.Generic;
 using System.Management.Automation;

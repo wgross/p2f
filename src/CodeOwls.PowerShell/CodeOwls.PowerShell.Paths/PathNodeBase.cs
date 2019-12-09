@@ -24,7 +24,7 @@ using CodeOwls.PowerShell.Provider.PathNodeProcessors;
 using System;
 using System.Collections.Generic;
 
-namespace CodeOwls.PowerShell.Provider.Paths
+namespace CodeOwls.PowerShell.Paths
 {
     public abstract class PathNodeBase : IPathNode
     {

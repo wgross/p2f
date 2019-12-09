@@ -22,7 +22,7 @@
 
 using CodeOwls.PowerShell.Paths.Extensions;
 
-namespace CodeOwls.PowerShell.Provider.Paths
+namespace CodeOwls.PowerShell.Paths
 {
     public class ContainerItemProvider : ItemProviderBase
     {

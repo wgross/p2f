@@ -1,6 +1,6 @@
-﻿using CodeOwls.PowerShell.Paths.Processors;
+﻿using CodeOwls.PowerShell.Paths;
+using CodeOwls.PowerShell.Paths.Processors;
 using CodeOwls.PowerShell.Provider;
-using CodeOwls.PowerShell.Provider.Paths;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -35,10 +35,7 @@ namespace ProviderFramework_3_TypeProvider
 
     internal class PathResolver : PathResolverBase
     {
-        protected override IPathNode Root
-        {
-            get { return new AppDomainPathNode(); }
-        }
+        protected override IPathNode Root => new AppDomainPathNode();
     }
 
     internal class AssemblyPathNode : PathNodeBase

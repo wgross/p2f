@@ -24,7 +24,6 @@ using CodeOwls.PowerShell.Paths;
 using CodeOwls.PowerShell.Paths.Exceptions;
 using CodeOwls.PowerShell.Paths.Processors;
 using CodeOwls.PowerShell.Provider.Attributes;
-using CodeOwls.PowerShell.Provider.Paths;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;

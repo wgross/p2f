@@ -1,4 +1,4 @@
-﻿using CodeOwls.PowerShell.Provider.Paths;
+﻿using CodeOwls.PowerShell.Paths;
 using System.Collections.Generic;
 using System.Linq;
 

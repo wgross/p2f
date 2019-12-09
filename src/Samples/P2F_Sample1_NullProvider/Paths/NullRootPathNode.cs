@@ -1,4 +1,4 @@
-﻿using CodeOwls.PowerShell.Provider.Paths;
+﻿using CodeOwls.PowerShell.Paths;
 
 namespace ProviderFramework_1_TheNullProvider
 {
