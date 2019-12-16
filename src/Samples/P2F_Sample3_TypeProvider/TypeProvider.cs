@@ -35,10 +35,10 @@ namespace ProviderFramework_3_TypeProvider
 
     internal class PathResolver : PathResolverBase
     {
-        protected override IPathNode Root => new AppDomainPathNode();
+        protected override PathNode Root => new AppDomainPathNode();
     }
 
-    internal class AssemblyPathNode : PathNodeBase
+    internal class AssemblyPathNode : PathNode
     {
         private readonly Assembly _assembly;
 
@@ -57,10 +57,10 @@ namespace ProviderFramework_3_TypeProvider
             get { return _assembly.GetName().Name; }
         }
 
-        public override IEnumerable<IPathNode> GetNodeChildren(CodeOwls.PowerShell.Provider.PathNodeProcessors.IProviderContext providerContext)
+        public override IEnumerable<PathNode> GetNodeChildren(CodeOwls.PowerShell.Provider.PathNodeProcessors.IProviderContext providerContext)
         {
             return from type in _assembly.GetExportedTypes()
-                   select new TypePathNode(type) as IPathNode;
+                   select new TypePathNode(type) as PathNode;
         }
     }
 }

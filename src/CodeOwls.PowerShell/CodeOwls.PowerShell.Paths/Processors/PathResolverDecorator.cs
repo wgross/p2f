@@ -36,7 +36,7 @@ namespace CodeOwls.PowerShell.Paths.Processors
 
         #region Implementation of IPathResolver
 
-        public virtual IEnumerable<IPathNode> ResolvePath(IProviderContext providerContext, string path)
+        public virtual IEnumerable<PathNode> ResolvePath(IProviderContext providerContext, string path)
         {
             return _basePathResolver.ResolvePath(providerContext, path);
         }

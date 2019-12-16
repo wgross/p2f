@@ -11,7 +11,7 @@ namespace ProviderFramework_1_TheNullProvider
         /// <summary>
         /// returns the first node factory object in the path graph
         /// </summary>
-        protected override IPathNode Root
+        protected override PathNode Root
         {
             get
             {

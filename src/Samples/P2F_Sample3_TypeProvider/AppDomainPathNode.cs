@@ -8,7 +8,7 @@ using System.Reflection;
 
 namespace ProviderFramework_3_TypeProvider
 {
-    internal class AppDomainPathNode : PathNodeBase, INewItem
+    internal class AppDomainPathNode : PathNode, INewItem
     {
         #region unchanged code from previous version
 
@@ -22,10 +22,10 @@ namespace ProviderFramework_3_TypeProvider
             get { return "AppDomain"; }
         }
 
-        public override IEnumerable<IPathNode> GetNodeChildren(CodeOwls.PowerShell.Provider.PathNodeProcessors.IProviderContext providerContext)
+        public override IEnumerable<PathNode> GetNodeChildren(CodeOwls.PowerShell.Provider.PathNodeProcessors.IProviderContext providerContext)
         {
             return from assembly in AppDomain.CurrentDomain.GetAssemblies()
-                   select new AssemblyPathNode(assembly) as IPathNode;
+                   select new AssemblyPathNode(assembly) as PathNode;
         }
 
         #endregion unchanged code from previous version

@@ -6,7 +6,7 @@ using System.Management.Automation;
 
 namespace ProviderFramework_3_TypeProvider
 {
-    internal class TypePathNode : PathNodeBase, IInvokeItem
+    internal class TypePathNode : PathNode, IInvokeItem
     {
         #region unchanged code
 

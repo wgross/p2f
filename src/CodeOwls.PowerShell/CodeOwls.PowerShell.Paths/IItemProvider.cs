@@ -33,14 +33,8 @@ namespace CodeOwls.PowerShell.Paths
     /// The item is provided completely fro <see cref="GetItem"/> or as properties collection from
     /// <see cref="GetItemProperties(IEnumerable{string})"/>
     /// </summary>
-    public interface IItemProvider
+    public interface IItemProvider : IGetItem
     {
-        string Name { get; }
-
-        bool IsContainer { get; }
-
-        object GetItem();
-
         IEnumerable<PSPropertyInfo> GetItemProperties(IEnumerable<string> propertyNames) => GetItemProperties(this, propertyNames);
 
         #region GetItemProperties default iomplementation

@@ -68,7 +68,7 @@ namespace CodeOwls.PowerShell.Provider.PathNodeProcessors
 
         bool Stopping { get; }
 
-        IPathNode ResolvePath(string path);
+        PathNode ResolvePath(string path);
 
         SessionState SessionState { get; }
         ProviderIntrinsics InvokeProvider { get; }

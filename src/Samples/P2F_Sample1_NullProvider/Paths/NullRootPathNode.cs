@@ -8,7 +8,7 @@ namespace ProviderFramework_1_TheNullProvider
     /// used by P2F to manage items for a
     /// particular path value.
     /// </summary>
-    internal class NullRootPathNode : PathNodeBase
+    internal class NullRootPathNode : PathNode
     {
         private const string NodeName = "NullRootNode";
 

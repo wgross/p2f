@@ -50,7 +50,7 @@ namespace CodeOwls.PowerShell.Paths.Processors
             _drives = drives;
         }
 
-        public override IEnumerable<IPathNode> ResolvePath(IProviderContext providerContext, string path)
+        public override IEnumerable<PathNode> ResolvePath(IProviderContext providerContext, string path)
         {
             ActiveDrive = (T)_drives.First();
 

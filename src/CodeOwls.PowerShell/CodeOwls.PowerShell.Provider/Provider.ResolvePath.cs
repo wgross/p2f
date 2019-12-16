@@ -8,13 +8,13 @@ namespace CodeOwls.PowerShell.Provider
     {
         private IEnumerable<T> GetPathNodesFromPath<T>(string path) => GetNodeFactoryFromPath(path).OfType<T>();
 
-        private IPathNode GetFirstNodeFactoryFromPath(string path) => GetNodeFactoryFromPath(path).FirstOrDefault();
+        private PathNode GetFirstNodeFactoryFromPath(string path) => GetNodeFactoryFromPath(path).FirstOrDefault();
 
-        private IEnumerable<IPathNode> GetNodeFactoryFromPath(string path) => GetNodeFactoryFromPath(path, true);
+        private IEnumerable<PathNode> GetNodeFactoryFromPath(string path) => GetNodeFactoryFromPath(path, true);
 
-        private IEnumerable<IPathNode> GetNodeFactoryFromPath(string path, bool resolveFinalFilter)
+        private IEnumerable<PathNode> GetNodeFactoryFromPath(string path, bool resolveFinalFilter)
         {
-            IEnumerable<IPathNode> pathNodes = ResolvePath(path);
+            IEnumerable<PathNode> pathNodes = ResolvePath(path);
 
             if (resolveFinalFilter && !string.IsNullOrEmpty(Filter))
             {
@@ -27,7 +27,7 @@ namespace CodeOwls.PowerShell.Provider
         private IEnumerable<T> GetPathNodesOrParentFromPath<T>(string path, out bool isParentOfPath)
             => this.GetNodeFactoryFromPathOrParent(path, out isParentOfPath).OfType<T>();
 
-        private IEnumerable<IPathNode> GetNodeFactoryFromPathOrParent(string path, out bool isParentOfPath)
+        private IEnumerable<PathNode> GetNodeFactoryFromPathOrParent(string path, out bool isParentOfPath)
         {
             isParentOfPath = false;
             var nodes = ResolvePath(path);
@@ -40,7 +40,7 @@ namespace CodeOwls.PowerShell.Provider
                 if (null == nodes || !nodes.Any())
                 {
                     //refactor: return null;
-                    return Enumerable.Empty<IPathNode>();
+                    return Enumerable.Empty<PathNode>();
                 }
 
                 isParentOfPath = true;

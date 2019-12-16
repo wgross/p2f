@@ -30,9 +30,9 @@ namespace CodeOwls.PowerShell.Paths.Processors
 {
     public abstract class PathResolverBase : IPathResolver
     {
-        protected abstract IPathNode Root { get; }
+        protected abstract PathNode Root { get; }
 
-        public virtual IEnumerable<IPathNode> ResolvePath(IProviderContext providerContext, string path)
+        public virtual IEnumerable<PathNode> ResolvePath(IProviderContext providerContext, string path)
         {
             Regex re = new Regex(@"^[-_a-z0-9:]+:/?");
             path = path.ToLowerInvariant().Replace('\\', '/');
@@ -42,7 +42,7 @@ namespace CodeOwls.PowerShell.Paths.Processors
 
             var nodeMonikers = path.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
 
-            IEnumerable<IPathNode> factories = new[] { factory };
+            IEnumerable<PathNode> factories = new[] { factory };
 
             foreach (var nodeMoniker in nodeMonikers)
             {

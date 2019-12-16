@@ -80,7 +80,7 @@ PROJECT NOTES
 		item 4 below for more information on these).  
 		
 		The path processor class must implement the 
-		CodeOwls.PowerShell.Paths.Processors.IPathNodeProcessor interface.
+		CodeOwls.PowerShell.Paths.Processors.PathNodeProcessor interface.
 		This interface provides a protocol for translating a path string into
 		an path node factory.  It is recommended that the class derive from the
 		CodeOwls.PowerShell.Paths.Processors.PathNodeProcessorBase class to
@@ -101,7 +101,7 @@ PROJECT NOTES
 		standard provider cmdlets (e.g., new-item).
 		
 		Path node classes must implement the
-		CodeOwls.PowerShell.Provider.PathNodes.IPathNode interface.  This
+		CodeOwls.PowerShell.Provider.PathNodes.PathNode interface.  This
 		interface provides a protocol for:
 		* querying a path node's name, 
 		* retrieving the path node's item (see 5 below), and 

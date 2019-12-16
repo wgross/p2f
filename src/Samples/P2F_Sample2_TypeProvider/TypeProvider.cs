@@ -35,13 +35,13 @@ namespace ProviderFramework_2_TypeProvider
 
     internal class PathResolver : PathResolverBase
     {
-        protected override IPathNode Root
+        protected override PathNode Root
         {
             get { return new AppDomainPathNode(); }
         }
     }
 
-    internal class AppDomainPathNode : PathNodeBase
+    internal class AppDomainPathNode : PathNode
     {
         public override IItemProvider GetItemProvider()
         {
@@ -53,14 +53,14 @@ namespace ProviderFramework_2_TypeProvider
             get { return "AppDomain"; }
         }
 
-        public override IEnumerable<IPathNode> GetNodeChildren(CodeOwls.PowerShell.Provider.PathNodeProcessors.IProviderContext providerContext)
+        public override IEnumerable<PathNode> GetNodeChildren(CodeOwls.PowerShell.Provider.PathNodeProcessors.IProviderContext providerContext)
         {
             return from assembly in AppDomain.CurrentDomain.GetAssemblies()
-                   select new AssemblyPathNode(assembly) as IPathNode;
+                   select new AssemblyPathNode(assembly) as PathNode;
         }
     }
 
-    internal class AssemblyPathNode : PathNodeBase
+    internal class AssemblyPathNode : PathNode
     {
         private readonly Assembly _assembly;
 
@@ -79,14 +79,14 @@ namespace ProviderFramework_2_TypeProvider
             get { return _assembly.GetName().Name; }
         }
 
-        public override IEnumerable<IPathNode> GetNodeChildren(CodeOwls.PowerShell.Provider.PathNodeProcessors.IProviderContext providerContext)
+        public override IEnumerable<PathNode> GetNodeChildren(CodeOwls.PowerShell.Provider.PathNodeProcessors.IProviderContext providerContext)
         {
             return from type in _assembly.GetExportedTypes()
-                   select new TypePathNode(type) as IPathNode;
+                   select new TypePathNode(type) as PathNode;
         }
     }
 
-    internal class TypePathNode : PathNodeBase
+    internal class TypePathNode : PathNode
     {
         private readonly Type _type;
 

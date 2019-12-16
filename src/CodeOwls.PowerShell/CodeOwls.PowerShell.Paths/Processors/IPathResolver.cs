@@ -27,6 +27,6 @@ namespace CodeOwls.PowerShell.Paths.Processors
 {
     public interface IPathResolver
     {
-        IEnumerable<IPathNode> ResolvePath(IProviderContext providerContext, string path);
+        IEnumerable<PathNode> ResolvePath(IProviderContext providerContext, string path);
     }
 }

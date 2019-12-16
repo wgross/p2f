@@ -84,7 +84,7 @@ namespace CodeOwls.PowerShell.Provider.PathNodeProcessors
 
         public bool ResolveFinalNodeFilterItems { get; set; }
 
-        public IPathNode ResolvePath(string path)
+        public PathNode ResolvePath(string path)
         {
             var items = _pathProcessor.ResolvePath(this, path);
             if (null != items && items.Any())
