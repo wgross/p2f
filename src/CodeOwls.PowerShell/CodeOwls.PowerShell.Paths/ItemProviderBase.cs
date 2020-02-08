@@ -50,7 +50,7 @@ namespace CodeOwls.PowerShell.Paths
             this.IsContainer = isContainer;
         }
 
-        public object GetItem() => this.item;
+        public virtual object GetItem() => this.item;
 
         public string Name => this.name.MakeSafeForPath();
 

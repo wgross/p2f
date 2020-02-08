@@ -23,15 +23,15 @@
 using CodeOwls.PowerShell.Provider.PathNodeProcessors;
 using System;
 using System.Collections.Generic;
-using System.Management.Automation;
+using System.Linq;
 
 namespace CodeOwls.PowerShell.Paths
 {
-    public abstract class PathNode
+    public abstract class PathNode : IGetChildItem
     {
         public virtual IEnumerable<PathNode> Resolve(IProviderContext providerContext, string nodeName)
         {
-            var children = GetNodeChildren(providerContext);
+            var children = GetChildNodes(providerContext);
             foreach (var child in children)
             {
                 if (null == nodeName || StringComparer.InvariantCultureIgnoreCase.Equals(nodeName, child.Name))
@@ -43,13 +43,8 @@ namespace CodeOwls.PowerShell.Paths
 
         public abstract IItemProvider GetItemProvider();
 
-        public virtual object GetNodeChildrenParameters => new RuntimeDefinedParameterDictionary();
-
-        public virtual IEnumerable<PathNode> GetNodeChildren(IProviderContext providerContext)
-        {
-            return null;
-        }
-
+        public virtual IEnumerable<PathNode> GetChildNodes(IProviderContext providerContext) => Enumerable.Empty<PathNode>();
+        
         private static readonly Dictionary<Type, string> ItemModeCache = new Dictionary<Type, string>();
 
         protected string EncodedItemMode

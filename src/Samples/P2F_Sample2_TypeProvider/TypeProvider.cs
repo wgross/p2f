@@ -41,7 +41,7 @@ namespace ProviderFramework_2_TypeProvider
         }
     }
 
-    internal class AppDomainPathNode : PathNode
+    internal class AppDomainPathNode : PathNode, IGetChildItem
     {
         public override IItemProvider GetItemProvider()
         {
@@ -53,14 +53,14 @@ namespace ProviderFramework_2_TypeProvider
             get { return "AppDomain"; }
         }
 
-        public override IEnumerable<PathNode> GetNodeChildren(CodeOwls.PowerShell.Provider.PathNodeProcessors.IProviderContext providerContext)
+        public IEnumerable<PathNode> GetChildNodes(CodeOwls.PowerShell.Provider.PathNodeProcessors.IProviderContext providerContext)
         {
             return from assembly in AppDomain.CurrentDomain.GetAssemblies()
                    select new AssemblyPathNode(assembly) as PathNode;
         }
     }
 
-    internal class AssemblyPathNode : PathNode
+    internal class AssemblyPathNode : PathNode, IGetChildItem
     {
         private readonly Assembly _assembly;
 
@@ -79,7 +79,7 @@ namespace ProviderFramework_2_TypeProvider
             get { return _assembly.GetName().Name; }
         }
 
-        public override IEnumerable<PathNode> GetNodeChildren(CodeOwls.PowerShell.Provider.PathNodeProcessors.IProviderContext providerContext)
+        public IEnumerable<PathNode> GetChildNodes(CodeOwls.PowerShell.Provider.PathNodeProcessors.IProviderContext providerContext)
         {
             return from type in _assembly.GetExportedTypes()
                    select new TypePathNode(type) as PathNode;

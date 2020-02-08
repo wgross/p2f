@@ -57,7 +57,7 @@ namespace ProviderFramework_3_TypeProvider
             get { return _assembly.GetName().Name; }
         }
 
-        public override IEnumerable<PathNode> GetNodeChildren(CodeOwls.PowerShell.Provider.PathNodeProcessors.IProviderContext providerContext)
+        public IEnumerable<PathNode> GetChildNodes(CodeOwls.PowerShell.Provider.PathNodeProcessors.IProviderContext providerContext)
         {
             return from type in _assembly.GetExportedTypes()
                    select new TypePathNode(type) as PathNode;

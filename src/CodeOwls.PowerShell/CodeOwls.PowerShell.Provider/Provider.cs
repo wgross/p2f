@@ -26,7 +26,6 @@ using CodeOwls.PowerShell.Paths.Processors;
 using CodeOwls.PowerShell.Provider.Attributes;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -99,11 +98,6 @@ namespace CodeOwls.PowerShell.Provider
 
             return path;
         }
-
-        #region Implementation of IPropertyCmdletProvider
-
-
-        #endregion Implementation of IPropertyCmdletProvider
 
         #region Implementation of ICmdletProviderSupportsHelp
 
@@ -272,7 +266,16 @@ namespace CodeOwls.PowerShell.Provider
 
             if (propertyNames is null || !propertyNames.Any())
             {
-                var psObject = PSObject.AsPSObject(itemProvider.GetItem());
+                var item = itemProvider.GetItem();
+                PSObject psObject = null;
+                if (item is PSObject pso)
+                {
+                    psObject = pso;
+                }
+                else
+                {
+                    psObject = PSObject.AsPSObject(itemProvider.GetItem());
+                }
                 psObject.Properties.Add(new PSNoteProperty(ItemModePropertyName, pathNode.ItemMode));
 
                 itemProvider
@@ -720,7 +723,7 @@ namespace CodeOwls.PowerShell.Provider
         }
 
         private void GetChildItems(string path, PathNode pathNode, bool recurse)
-            => WriteChildItem(path, recurse, pathNode.GetNodeChildren(CreateContext(path, recurse)));
+            => WriteChildItem(path, recurse, pathNode.GetChildNodes(CreateContext(path, recurse)));
 
         protected override object GetChildItemsDynamicParameters(string path, bool recurse)
             => ExecuteAndLog(() => DoGetChildItemsDynamicParameters(path), nameof(GetChildItemsDynamicParameters), path, recurse.ToString());
@@ -733,7 +736,7 @@ namespace CodeOwls.PowerShell.Provider
                 return null;
             }
 
-            return pathNode.GetNodeChildrenParameters;
+            return ((IGetChildItem)pathNode).GetChildItemParameters;
         }
 
         private void WriteChildItem(string path, bool recurse, IEnumerable<PathNode> children)
@@ -757,7 +760,7 @@ namespace CodeOwls.PowerShell.Provider
                     if (recurse)
                     {
                         var context = CreateContext(path, recurse);
-                        var kids = pathNode.GetNodeChildren(context);
+                        var kids = pathNode.GetChildNodes(context);
                         WriteChildItem(childPath, recurse, kids);
                     }
                 }
@@ -795,7 +798,7 @@ namespace CodeOwls.PowerShell.Provider
 
         private void GetChildNames(string path, PathNode pathNode, ReturnContainers returnContainers)
         {
-            pathNode.GetNodeChildren(CreateContext(path)).ToList().ForEach(
+            pathNode.GetChildNodes(CreateContext(path)).ToList().ForEach(
                 pathNode =>
                 {
                     var i = pathNode.GetItemProvider();
@@ -821,7 +824,7 @@ namespace CodeOwls.PowerShell.Provider
                 return null;
             }
 
-            return pathNode.GetNodeChildrenParameters;
+            return ((IGetChildItem)pathNode).GetChildItemParameters;
         }
 
         protected override void RenameItem(string path, string newName)
@@ -885,6 +888,8 @@ namespace CodeOwls.PowerShell.Provider
             return rename.RenameItemParameters;
         }
 
+        #region ContainerCmdletProvider: NewItem
+
         protected override void NewItem(string path, string itemTypeName, object newItemValue)
             => ExecuteAndLog(() => DoNewItem(path, itemTypeName, newItemValue), nameof(NewItem), itemTypeName, newItemValue.ToArgString());
 
@@ -938,15 +943,6 @@ namespace CodeOwls.PowerShell.Provider
             }
         }
 
-        protected string GetRootPath()
-        {
-            if (null != PSDriveInfo)
-            {
-                return PSDriveInfo.Root;
-            }
-            return String.Empty;
-        }
-
         protected override object NewItemDynamicParameters(string path, string itemTypeName, object newItemValue)
         {
             Func<object> a = () => DoNewItemDynamicParameters(path);
@@ -963,6 +959,17 @@ namespace CodeOwls.PowerShell.Provider
             }
 
             return newItemFactory.NewItemParameters;
+        }
+
+        #endregion ContainerCmdletProvider: NewItem
+
+        protected string GetRootPath()
+        {
+            if (null != PSDriveInfo)
+            {
+                return PSDriveInfo.Root;
+            }
+            return String.Empty;
         }
 
         private void WritePathNode(string nodeContainerPath, PathNode factory)
@@ -1065,7 +1072,7 @@ namespace CodeOwls.PowerShell.Provider
             {
                 return false;
             }
-            var nodes = factory.GetNodeChildren(CreateContext(path));
+            var nodes = factory.GetChildNodes(CreateContext(path));
             if (null == nodes)
             {
                 return false;
