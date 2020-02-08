@@ -175,10 +175,11 @@ namespace CodeOwls.PowerShell.Provider.PathNodeProcessors
             _provider.WritePropertyObject(propertyValue, path);
         }
 
-        public void WriteSecurityDescriptorObject(ObjectSecurity securityDescriptor, string path)
-        {
-            _provider.WriteSecurityDescriptorObject(securityDescriptor, path);
-        }
+        // not with powershell std lib 5
+        //public void WriteSecurityDescriptorObject(ObjectSecurity securityDescriptor, string path)
+        //{
+        //    _provider.WriteSecurityDescriptorObject(securityDescriptor, path);
+        //}
 
         public void WriteError(ErrorRecord errorRecord)
         {

@@ -62,7 +62,8 @@ namespace CodeOwls.PowerShell.Provider.PathNodeProcessors
 
         void WritePropertyObject(object propertyValue, string path);
 
-        void WriteSecurityDescriptorObject(ObjectSecurity securityDescriptor, string path);
+        // not with powershell std lib 5
+        //void WriteSecurityDescriptorObject(ObjectSecurity securityDescriptor, string path);
 
         void WriteError(ErrorRecord errorRecord);
 
