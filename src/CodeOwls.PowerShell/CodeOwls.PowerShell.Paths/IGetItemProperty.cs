@@ -1,15 +1,13 @@
-﻿//using CodeOwls.PowerShell.Provider.PathNodeProcessors;
-//using System;
-//using System.Collections.Generic;
-//using System.Management.Automation;
-//using System.Text;
+﻿using CodeOwls.PowerShell.Provider.PathNodeProcessors;
+using System.Collections.Generic;
+using System.Management.Automation;
 
-//namespace CodeOwls.PowerShell.Paths
-//{
-//    public interface IGetProperty
-//    {
-//        object GetItemPorpertyParameters => new RuntimeDefinedParameterDictionary();
+namespace CodeOwls.PowerShell.Paths
+{
+    public interface IGetItemProperty
+    {
+        object GetItemPropertyParameters => new RuntimeDefinedParameterDictionary();
 
-//        IEnumerable<PSProperty> SetItemProperty(IProviderContext providerContext, string path, object value);
-//    }
-//}
+        IEnumerable<PSPropertyInfo> GetItemProperties(IProviderContext providerContext, IEnumerable<string> propertyNames);
+    }
+}

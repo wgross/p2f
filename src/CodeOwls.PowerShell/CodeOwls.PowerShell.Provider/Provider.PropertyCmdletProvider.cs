@@ -25,7 +25,8 @@ namespace CodeOwls.PowerShell.Provider
             }
         }
 
-        public object GetPropertyDynamicParameters(string path, Collection<string> providerSpecificPickList) => null;
+        public object GetPropertyDynamicParameters(string path, Collection<string> providerSpecificPickList)
+            => GetPathNodesFromPath<IGetItemProperty>(path).FirstOrDefault()?.GetItemPropertyParameters;
 
         #endregion GetProperty
 
@@ -35,12 +36,13 @@ namespace CodeOwls.PowerShell.Provider
             => ExecuteAndLog(() => DoSetProperty(path, propertyValue), nameof(SetProperty), path, propertyValue.ToArgString());
 
         private void DoSetProperty(string path, PSObject propertyValue)
-            => GetNodeFactoryFromPath(path).ToList().ForEach(f => SetProperty(path, f, propertyValue));
+            => GetPathNodesFromPath<ISetItemProperty>(path).ToList().ForEach(n => n.SetItemProperties(CreateContext(path), propertyValue.Properties));
 
-        private void SetProperty(string path, PathNode factory, PSObject propertyValue)
-            => factory.GetItemProvider().SetItemProperties(propertyValue.Properties);
+        public object SetPropertyDynamicParameters(string path, PSObject propertyValue)
+            => ExecuteAndLog(() => DoSetPropertyDynamicParameters(path, propertyValue), nameof(SetPropertyDynamicParameters), path, propertyValue.ToArgString());
 
-        public object SetPropertyDynamicParameters(string path, PSObject propertyValue) => null;
+        private object DoSetPropertyDynamicParameters(string path, PSObject propertyValue)
+            => GetPathNodesFromPath<ISetItemProperty>(path).FirstOrDefault()?.SetItemPropertyParameters;
 
         #endregion SetPropery
 
@@ -49,8 +51,8 @@ namespace CodeOwls.PowerShell.Provider
         public void ClearProperty(string path, Collection<string> propertyToClear)
              => ExecuteAndLog(() => ClearPropertyImpl(path, propertyToClear), nameof(ClearProperty), path);
 
-        private void ClearPropertyImpl(string path, Collection<string> propertyToClear)
-            => GetNodeFactoryFromPath(path).OfType<IClearItemProperty>().ToList().ForEach(pathNode => ClearProperty(path, pathNode, propertyToClear));
+        private void ClearPropertyImpl(string path, Collection<string> propertiesToClear)
+            => GetPathNodesFromPath<IClearItemProperty>(path).ToList().ForEach(n => n.ClearItemProperty(CreateContext(path), propertiesToClear));
 
         private void ClearProperty(string path, IClearItemProperty pathNodeCapability, Collection<string> propertyToClear)
         {
