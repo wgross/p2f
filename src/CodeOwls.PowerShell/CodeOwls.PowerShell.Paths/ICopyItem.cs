@@ -29,6 +29,6 @@ namespace CodeOwls.PowerShell.Paths
     {
         object CopyItemParameters => new RuntimeDefinedParameterDictionary();
 
-        void CopyItem(IProviderContext providerContext, string sourceItemName, string destinationItemName, IItemProvider destinationContainer, bool recurse);
+        void CopyItem(IProviderContext providerContext, string sourceItemName, string destinationItemName, PathNode destinationNode);
     }
 }

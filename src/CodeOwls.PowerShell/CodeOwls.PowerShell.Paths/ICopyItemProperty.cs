@@ -12,6 +12,6 @@ namespace CodeOwls.PowerShell.Paths
 
     public interface ICopyItemPropertyDestination
     {
-        void CopyItemProperty(IProviderContext providerContext, string sourcePropertyName, string destinationPropertyName, IItemProvider sourceItemProvider);
+        void CopyItemProperty(IProviderContext providerContext, string sourcePropertyName, string destinationPropertyName, PathNode sourceNode);
     }
 }

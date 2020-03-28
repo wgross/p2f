@@ -1,4 +1,5 @@
 ﻿using CodeOwls.PowerShell.Paths;
+using CodeOwls.PowerShell.Provider.PathNodeProcessors;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,52 +9,63 @@ namespace CodeOwls.PowerShell.Provider
 {
     public partial class Provider
     {
-        private static (bool created, PSObject psObject, bool isCollection) TryMakePsObjectFromPathNode(PathNode pathNode, IEnumerable<string> propertyNames)
-        {
-            var itemProvider = pathNode.GetItemProvider();
-            if (itemProvider is null)
-            {
-                return (false, null, false);
-            }
+        #region Write a PathNode to the PowerShell default output as PSObject
 
+        // Called from New-Item
+        // move doesn outout in PS7, Set-Item most probably doesn't too.
+        private void WritePathNode(IProviderContext providerContext, string nodePath, PathNode pathNode)
+        {
+            WriteItemObject(pathNode.GetItem(providerContext), MakePath(nodePath, pathNode.Name), pathNode.IsContainer);
+        }
+
+        private void WritePathNodeAsPSObject(IProviderContext providerContext, string nodePath, PathNode pathNode)
+        {
+            var pso = TryMakePsObjectFromPathNode(providerContext, nodePath, pathNode, propertyNames: Enumerable.Empty<string>());
+
+            //nodeContainerPath = SessionState.Path.GetUnresolvedProviderPathFromPSPath(nodeContainerPath);
+
+            if (pso.created)
+            {
+                WriteItemObject(pso.psObject, nodePath, pso.isCollection);
+            }
+        }
+
+        private (bool created, PSObject psObject, bool isCollection) TryMakePsObjectFromPathNode(IProviderContext providerContext, string nodePath, PathNode pathNode, IEnumerable<string> propertyNames)
+        {
             if (propertyNames is null || !propertyNames.Any())
             {
-                var item = itemProvider.GetItem();
-                PSObject psObject = null;
-                if (item is PSObject pso)
-                {
-                    psObject = pso;
-                }
-                else
-                {
-                    psObject = PSObject.AsPSObject(itemProvider.GetItem());
-                }
-                psObject.Properties.Add(new PSNoteProperty(ItemModePropertyName, pathNode.ItemMode));
-
-                itemProvider
-                    .GetItemProperties(propertyNames)
-                    .Aggregate(psObject.Properties, (psoProps, p) =>
-                    {
-                        psoProps.Add(p);
-                        return psoProps;
-                    });
-                return (true, psObject, itemProvider.IsContainer);
+                return TryMakePsObjectFromAllProperties(providerContext, pathNode);
             }
             else
             {
-                var psObject = new PSObject();
-
-                itemProvider
-                    .GetItemProperties(propertyNames)
-                    .Aggregate(psObject.Properties, (psoProps, p) =>
-                    {
-                        psoProps.Add(p);
-                        return psoProps;
-                    });
-
-                return (true, psObject, itemProvider.IsContainer);
+                return TryMakePsObjectFromPathNodeWithPickList(nodePath, pathNode, propertyNames);
             }
         }
+
+        private (bool created, PSObject psObject, bool isCollection) TryMakePsObjectFromAllProperties(IProviderContext providerContext, PathNode pathNode) => (true, pathNode.GetItem(providerContext), pathNode.IsContainer);
+
+        private (bool created, PSObject psObject, bool isCollection) TryMakePsObjectFromPathNodeWithPickList(string nodePath, PathNode pathNode, IEnumerable<string> propertyNames)
+        {
+            var (has, getItemProperties) = pathNode.TryGetCapability<IGetItemProperty>();
+            if (!has)
+                throw new NotImplementedException($"{nameof(IGetItemProperty)} isn't implemented by {pathNode.Name} at {nodePath}");
+
+            var psObject = getItemProperties
+                .GetItemProperties(this.CreateContext(nodePath), propertyNames)
+                .Aggregate(new PSObject(), (pso, p) =>
+                {
+                    // dynamic properties must NOT be refelection based.
+                    // convert the C# properties to not properties
+                    pso.Properties.Add(new PSNoteProperty(p.Name, p.Value));
+                    return pso;
+                });
+
+            return (true, psObject, pathNode.IsContainer);
+        }
+
+        #endregion Write a PathNode to the PowerShell default output as PSObject
+
+        #region Write an Cmdlet Error to the error stream
 
         private void WriteGeneralCmdletError(Exception exception, string errorId, string path)
         {
@@ -64,5 +76,7 @@ namespace CodeOwls.PowerShell.Provider
                 path
             ));
         }
+
+        #endregion Write an Cmdlet Error to the error stream
     }
 }

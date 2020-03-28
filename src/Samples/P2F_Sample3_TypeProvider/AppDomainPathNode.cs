@@ -8,11 +8,11 @@ using System.Reflection;
 
 namespace ProviderFramework_3_TypeProvider
 {
-    internal class AppDomainPathNode : PathNode, INewItem, IGetChildItem
+    internal class AppDomainPathNode : ContainerNode, INewItem, IGetChildItem
     {
         #region unchanged code from previous version
 
-        public override IItemProvider GetItemProvider()
+        public IItemProvider GetItemProvider()
         {
             return new ContainerItemProvider(AppDomain.CurrentDomain, Name);
         }
@@ -22,7 +22,7 @@ namespace ProviderFramework_3_TypeProvider
             get { return "AppDomain"; }
         }
 
-        public IEnumerable<PathNode> GetChildNodes(CodeOwls.PowerShell.Provider.PathNodeProcessors.IProviderContext providerContext)
+        public override IEnumerable<PathNode> GetChildNodes(CodeOwls.PowerShell.Provider.PathNodeProcessors.IProviderContext providerContext)
         {
             return from assembly in AppDomain.CurrentDomain.GetAssemblies()
                    select new AssemblyPathNode(assembly) as PathNode;
@@ -69,7 +69,7 @@ namespace ProviderFramework_3_TypeProvider
         /// <param name="itemTypeName">the type of the item to create; unused in this value</param>
         /// <param name="newItemValue">the value of the new item to create; unused in this value</param>
         /// <returns></returns>
-        public IItemProvider NewItem(IProviderContext providerContext, string path, string itemTypeName, object newItemValue)
+        public PathNode NewItem(IProviderContext providerContext, string path, string itemTypeName, object newItemValue)
         {
             IEnumerable<PSObject> results = new PSObject[] { };
 
@@ -111,8 +111,9 @@ namespace ProviderFramework_3_TypeProvider
 
             // to maintain consistency I find it easier to leverage the value factory classes rather than return
             //  an IPathValue instance directly.
-            var nodeFactory = new AssemblyPathNode(assembly);
-            return nodeFactory.GetItemProvider();
+            return new AssemblyPathNode(assembly);
         }
+
+        public override PSObject GetItem(IProviderContext providerContext) => this.GetItemProvider().GetItem(providerContext);
     }
 }

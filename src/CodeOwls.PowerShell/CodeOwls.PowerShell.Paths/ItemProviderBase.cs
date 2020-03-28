@@ -21,6 +21,8 @@
 */
 
 using CodeOwls.PowerShell.Paths.Extensions;
+using CodeOwls.PowerShell.Provider.PathNodeProcessors;
+using System.Management.Automation;
 
 namespace CodeOwls.PowerShell.Paths
 {
@@ -50,7 +52,7 @@ namespace CodeOwls.PowerShell.Paths
             this.IsContainer = isContainer;
         }
 
-        public virtual object GetItem() => this.item;
+        public virtual PSObject GetItem(IProviderContext providerContext) => PSObject.AsPSObject(this.item);
 
         public string Name => this.name.MakeSafeForPath();
 

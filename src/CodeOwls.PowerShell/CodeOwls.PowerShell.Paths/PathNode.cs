@@ -24,10 +24,11 @@ using CodeOwls.PowerShell.Provider.PathNodeProcessors;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Management.Automation;
 
 namespace CodeOwls.PowerShell.Paths
 {
-    public abstract class PathNode : IGetChildItem
+    public abstract class PathNode : IGetItem, IGetItemProperty, IGetChildItem
     {
         public virtual IEnumerable<PathNode> Resolve(IProviderContext providerContext, string nodeName)
         {
@@ -41,59 +42,64 @@ namespace CodeOwls.PowerShell.Paths
             }
         }
 
-        public abstract IItemProvider GetItemProvider();
+        /// <summary>
+        /// The IsContainer property indicates if this node may hold aother nodes as subnodes.
+        /// It doesn't indicate if the conatiner has currenty child nodes.
+        /// </summary>
+        public abstract bool IsContainer { get; }
 
-        public virtual IEnumerable<PathNode> GetChildNodes(IProviderContext providerContext) => Enumerable.Empty<PathNode>();
-        
-        private static readonly Dictionary<Type, string> ItemModeCache = new Dictionary<Type, string>();
+        /// <summary>
+        /// Any path node must provide a name shis represenst it under its parents name.
+        /// </summary>
+        public abstract string Name { get; }
 
-        protected string EncodedItemMode
+        /// <summary>
+        /// A path node may implement on e or more capabilities. Every Powershell provioder Cmdlet requires one
+        /// to process this node.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public virtual (bool has, T capability) TryGetCapability<T>() where T : class
         {
-            get
-            {
-                // "dnrgslcmri"
-                // "d+~<>0cmri"
-
-                bool canCopy = null != this as ICopyItem;
-                bool canRemove = null != this as IRemoveItem;
-                bool canMove = canCopy && canRemove;
-                var d = " ";
-                var containerEncoded = GetItemProvider().IsContainer ? "d" : d;
-                var newEncoded = null != this as INewItem ? "+" : d;
-                var removeEncoded = null != this as IRemoveItem ? "~" : d;
-
-                var getEncoded = null != GetItemProvider() ? "<" : d;
-                var setEncoded = null != this as ISetItem ? ">" : d;
-                var clearEncoded = null != this as IClearItem ? "0" : d;
-
-                var copyEncoded = canCopy ? "c" : d;
-                var moveEncoded = canMove ? "m" : d; ;
-                var renameEncoded = null != this as IRenameItem ? "r" : d;
-                var invokeEncoded = null != this as IInvokeItem ? "i" : d;
-                return containerEncoded + newEncoded + removeEncoded + getEncoded + setEncoded +
-                                      clearEncoded +
-                                      copyEncoded + moveEncoded + renameEncoded + invokeEncoded;
-            }
+            if (this is T cability)
+                return (true, cability);
+            return (false, default);
         }
 
-        public virtual string ItemMode
+        #region IGetChildNodes
+
+        public abstract IEnumerable<PathNode> GetChildNodes(IProviderContext providerContext);
+
+        #endregion IGetChildNodes
+
+        #region IGetItem
+
+        public abstract PSObject GetItem(IProviderContext providerContext);
+
+        #endregion IGetItem
+
+        #region IGetItemProperties
+
+        public IEnumerable<PSPropertyInfo> GetItemProperties(IProviderContext providerContext, IEnumerable<string> propertyNames)
         {
-            get
-            {
-                var type = GetType();
+            if (propertyNames.Any())
+                return this.GetItem(providerContext).Properties.Where(p => propertyNames.Contains(p.Name, StringComparer.OrdinalIgnoreCase));
 
-                if (!ItemModeCache.ContainsKey(type))
-                {
-                    ItemModeCache[type] = EncodedItemMode;
-                }
-
-                return ItemModeCache[type];
-            }
+            return this.GetItem(providerContext).Properties;
         }
 
-        public abstract string Name
-        {
-            get;
-        }
+        #endregion IGetItemProperties
+    }
+
+    public abstract class LeafNode : PathNode
+    {
+        public override IEnumerable<PathNode> GetChildNodes(IProviderContext providerContext) => Enumerable.Empty<PathNode>();
+
+        public override bool IsContainer => false;
+    }
+
+    public abstract class ContainerNode : PathNode
+    {
+        public override bool IsContainer => true;
     }
 }

@@ -1,4 +1,6 @@
 ﻿using CodeOwls.PowerShell.Paths;
+using CodeOwls.PowerShell.Provider.PathNodeProcessors;
+using System.Management.Automation;
 
 namespace ProviderFramework_1_TheNullProvider
 {
@@ -8,7 +10,7 @@ namespace ProviderFramework_1_TheNullProvider
     /// used by P2F to manage items for a
     /// particular path value.
     /// </summary>
-    internal class NullRootPathNode : PathNode
+    internal class NullRootPathNode : LeafNode
     {
         private const string NodeName = "NullRootNode";
 
@@ -22,7 +24,7 @@ namespace ProviderFramework_1_TheNullProvider
         /// <seealso cref="PathValue"/>
         /// <seealso cref="LeafPathValue"/>
         /// <seealso cref="ContainerPathValue"/>
-        public override IItemProvider GetItemProvider()
+        public IItemProvider GetItemProvider()
         {
             var item = new NullItem();
 
@@ -36,5 +38,7 @@ namespace ProviderFramework_1_TheNullProvider
         {
             get { return NullRootPathNode.NodeName; }
         }
+
+        public override PSObject GetItem(IProviderContext providerContext) => this.GetItemProvider().GetItem(providerContext);
     }
 }

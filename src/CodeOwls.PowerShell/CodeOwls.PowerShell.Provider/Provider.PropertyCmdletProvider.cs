@@ -1,4 +1,5 @@
 ﻿using CodeOwls.PowerShell.Paths;
+using CodeOwls.PowerShell.Provider.PathNodeProcessors;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Management.Automation;
@@ -11,17 +12,17 @@ namespace CodeOwls.PowerShell.Provider
         #region GetProperty
 
         public void GetProperty(string path, Collection<string> providerSpecificPickList)
-            => ExecuteAndLog(() => DoGetProperty(path, providerSpecificPickList), nameof(GetProperty), path, providerSpecificPickList.ToArgList());
+            => ExecuteAndLog(() => DoGetProperty(CreateContext(path), path, providerSpecificPickList), nameof(GetProperty), path, providerSpecificPickList.ToArgList());
 
-        private void DoGetProperty(string path, Collection<string> providerSpecificPickList)
-            => GetNodeFactoryFromPath(path).ToList().ForEach(f => GetProperty(path, f, providerSpecificPickList));
+        private void DoGetProperty(IProviderContext providerContext, string path, Collection<string> providerSpecificPickList)
+            => GetNodeFactoryFromPath(path).ToList().ForEach(f => GetProperty(providerContext, path, f, providerSpecificPickList));
 
-        private void GetProperty(string path, PathNode factory, Collection<string> providerSpecificPickList)
+        private void GetProperty(IProviderContext providerContext, string nodePath, PathNode pathNode, Collection<string> providerSpecificPickList)
         {
-            var pso = TryMakePsObjectFromPathNode(factory, providerSpecificPickList);
+            var pso = TryMakePsObjectFromPathNode(providerContext, nodePath, pathNode, providerSpecificPickList);
             if (pso.created)
             {
-                WritePropertyObject(pso.psObject, path);
+                WritePropertyObject(pso.psObject, nodePath);
             }
         }
 

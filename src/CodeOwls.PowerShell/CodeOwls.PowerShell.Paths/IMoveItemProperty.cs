@@ -12,6 +12,6 @@ namespace CodeOwls.PowerShell.Paths
 
     public interface IMoveItemPropertyDestination
     {
-        void MoveItemProperty(IProviderContext providerContext, string sourceProperty, string destinationProperty, IItemProvider sourceItemProvider);
+        void MoveItemProperty(IProviderContext providerContext, string sourceProperty, string destinationProperty, PathNode sourceItemProvider);
     }
 }

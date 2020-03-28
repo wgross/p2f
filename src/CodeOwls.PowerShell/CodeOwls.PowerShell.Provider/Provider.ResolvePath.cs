@@ -6,7 +6,7 @@ namespace CodeOwls.PowerShell.Provider
 {
     public partial class Provider
     {
-        private IEnumerable<T> GetPathNodesFromPath<T>(string path) => GetNodeFactoryFromPath(path).OfType<T>();
+        internal IEnumerable<T> GetPathNodesFromPath<T>(string path) => GetNodeFactoryFromPath(path).OfType<T>();
 
         private PathNode GetFirstNodeFactoryFromPath(string path) => GetNodeFactoryFromPath(path).FirstOrDefault();
 

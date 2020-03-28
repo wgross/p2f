@@ -6,7 +6,7 @@ using System.Management.Automation;
 
 namespace ProviderFramework_3_TypeProvider
 {
-    internal class TypePathNode : PathNode, IInvokeItem
+    internal class TypePathNode : LeafNode, IInvokeItem
     {
         #region unchanged code
 
@@ -17,7 +17,7 @@ namespace ProviderFramework_3_TypeProvider
             _type = type;
         }
 
-        public override IItemProvider GetItemProvider()
+        public IItemProvider GetItemProvider()
         {
             return new LeafItemProvider(_type, Name);
         }
@@ -76,5 +76,7 @@ namespace ProviderFramework_3_TypeProvider
             // return the object created
             return new[] { item };
         }
+
+        public override PSObject GetItem(IProviderContext providerContext) => this.GetItemProvider().GetItem(providerContext);
     }
 }

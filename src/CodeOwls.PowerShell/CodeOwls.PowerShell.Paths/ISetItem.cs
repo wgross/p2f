@@ -29,6 +29,6 @@ namespace CodeOwls.PowerShell.Paths
     {
         object SetItemParameters => new RuntimeDefinedParameterDictionary();
 
-        IItemProvider SetItem(IProviderContext providerContext, string path, object value);
+        void SetItem(IProviderContext providerContext, string path, object value);
     }
 }

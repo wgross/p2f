@@ -32,6 +32,6 @@ namespace CodeOwls.PowerShell.Paths
     {
         object RemoveItemParameters => new RuntimeDefinedParameterDictionary();
 
-        void RemoveItem(IProviderContext providerContext, string path, bool recurse);
+        void RemoveItem(IProviderContext providerContext, string path);
     }
 }

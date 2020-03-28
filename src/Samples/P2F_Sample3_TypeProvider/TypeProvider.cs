@@ -1,6 +1,7 @@
 ﻿using CodeOwls.PowerShell.Paths;
 using CodeOwls.PowerShell.Paths.Processors;
 using CodeOwls.PowerShell.Provider;
+using CodeOwls.PowerShell.Provider.PathNodeProcessors;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -38,7 +39,7 @@ namespace ProviderFramework_3_TypeProvider
         protected override PathNode Root => new AppDomainPathNode();
     }
 
-    internal class AssemblyPathNode : PathNode
+    internal class AssemblyPathNode : ContainerNode
     {
         private readonly Assembly _assembly;
 
@@ -47,7 +48,7 @@ namespace ProviderFramework_3_TypeProvider
             _assembly = assembly;
         }
 
-        public override IItemProvider GetItemProvider()
+        public IItemProvider GetItemProvider()
         {
             return new ContainerItemProvider(_assembly, Name);
         }
@@ -57,10 +58,12 @@ namespace ProviderFramework_3_TypeProvider
             get { return _assembly.GetName().Name; }
         }
 
-        public IEnumerable<PathNode> GetChildNodes(CodeOwls.PowerShell.Provider.PathNodeProcessors.IProviderContext providerContext)
+        public override IEnumerable<PathNode> GetChildNodes(CodeOwls.PowerShell.Provider.PathNodeProcessors.IProviderContext providerContext)
         {
             return from type in _assembly.GetExportedTypes()
                    select new TypePathNode(type) as PathNode;
         }
+
+        public override PSObject GetItem(IProviderContext providerContext) => this.GetItemProvider().GetItem(providerContext);
     }
 }

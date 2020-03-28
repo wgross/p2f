@@ -10,6 +10,16 @@ namespace CodeOwls.PowerShell.Provider
     {
         #region NewProperty
 
+        public void _NewProperty(string path, string propertyName, string propertyTypeName, object value)
+        {
+            using (var call = this.StepInProviderMethod(path))
+            {
+                call
+                    .Resolve<INewItemProperty>(path)
+                    .InvokeWithContext((ctx, nip) => nip.Foreach(n => n.NewItemProperty(ctx, path, propertyName, value)));
+            }
+        }
+
         public void NewProperty(string path, string propertyName, string propertyTypeName, object value)
         {
             this.ExecuteAndLog(
@@ -56,8 +66,8 @@ namespace CodeOwls.PowerShell.Provider
 
         public void CopyPropertyImpl(string sourcePath, string sourceProperty, string destinationPath, string destinationProperty)
         {
-            var sourcePathNode = GetPathNodesFromPath<ICopyItemPropertySource>(sourcePath).FirstOrDefault();
-            if (sourcePathNode is null)
+            var sourcePathNode = GetNodeFactoryFromPath(sourcePath).FirstOrDefault();
+            if (!sourcePathNode.TryGetCapability<ICopyItemPropertySource>().has)
             {
                 this.WriteCmdletNotSupportedAtNodeError(sourcePath, ProviderCmdlet.CopyItemProperty, NotImplementedErrorId);
                 return;
@@ -85,7 +95,7 @@ namespace CodeOwls.PowerShell.Provider
             var destinationItemName = isParentNode ? GetChildName(destinationPath) : null;
             var destinationContainerPath = isParentNode ? GetParentPath(destinationPath, GetRootPath()) : destinationPath;
 
-            copyDestinationPathNode.CopyItemProperty(CreateContext(destinationPath), sourceProperty, destinationProperty, sourcePathNode.GetItemProvider());
+            copyDestinationPathNode.CopyItemProperty(CreateContext(destinationPath), sourceProperty, destinationProperty, sourcePathNode);
         }
 
         public object CopyPropertyDynamicParameters(string sourcePath, string sourceProperty, string destinationPath, string destinationProperty)
@@ -105,10 +115,16 @@ namespace CodeOwls.PowerShell.Provider
 
         public void MovePropertyImpl(string sourcePath, string sourceProperty, string destinationPath, string destinationProperty)
         {
-            var sourcePathNode = GetPathNodesFromPath<IMoveItemPropertySource>(sourcePath).FirstOrDefault();
-            if (sourcePathNode is null)
+            var sourcePathNode = GetNodeFactoryFromPath(sourcePath).FirstOrDefault();
+            if (!sourcePathNode.TryGetCapability<IMoveItemPropertySource>().has)
             {
-                this.WriteCmdletNotSupportedAtNodeError(sourcePath, ProviderCmdlet.CopyItemProperty, NotImplementedErrorId);
+                this.WriteCmdletNotSupportedAtNodeError(sourcePath, ProviderCmdlet.MoveItemProperty, NotImplementedErrorId);
+                return;
+            }
+
+            if (!sourcePathNode.TryGetCapability<IRemoveItemProperty>().has)
+            {
+                this.WriteCmdletNotSupportedAtNodeError(sourcePath, ProviderCmdlet.RemoveItemProperty, NotImplementedErrorId);
                 return;
             }
 
@@ -134,8 +150,8 @@ namespace CodeOwls.PowerShell.Provider
             var destinationItemName = isParentNode ? GetChildName(destinationPath) : null;
             var destinationContainerPath = isParentNode ? GetParentPath(destinationPath, GetRootPath()) : destinationPath;
 
-            moveDestinationPathNode.MoveItemProperty(CreateContext(destinationPath), sourceProperty, destinationProperty, sourcePathNode.GetItemProvider());
-            sourcePathNode.RemoveItemProperty(CreateContext(destinationPath), sourceProperty);
+            moveDestinationPathNode.MoveItemProperty(CreateContext(destinationPath), sourceProperty, destinationProperty, sourcePathNode);
+            sourcePathNode.TryGetCapability<IRemoveItemProperty>().capability.RemoveItemProperty(CreateContext(destinationPath), sourceProperty);
         }
 
         public object MovePropertyDynamicParameters(string sourcePath, string sourceProperty, string destinationPath, string destinationProperty)

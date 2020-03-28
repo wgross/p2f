@@ -25,7 +25,7 @@ namespace CodeOwls.PowerShell.Provider
         {
             try
             {
-                WritePathNode(path, factory);
+                WritePathNodeAsPSObject(CreateContext(path), path, factory);
             }
             catch (Exception e)
             {

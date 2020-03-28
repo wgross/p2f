@@ -20,6 +20,7 @@
 	IN THE SOFTWARE.
 */
 
+using CodeOwls.PowerShell.Provider.PathNodeProcessors;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -35,18 +36,18 @@ namespace CodeOwls.PowerShell.Paths
     /// </summary>
     public interface IItemProvider : IGetItem
     {
-        IEnumerable<PSPropertyInfo> GetItemProperties(IEnumerable<string> propertyNames) => GetItemProperties(this, propertyNames);
+        IEnumerable<PSPropertyInfo> GetItemProperties(IProviderContext providerContext, IEnumerable<string> propertyNames) => GetItemProperties(providerContext, this, propertyNames);
 
-        #region GetItemProperties default iomplementation
+        #region GetItemProperties default implementation
 
-        static IEnumerable<PSPropertyInfo> GetItemProperties(IItemProvider thisPathValue, IEnumerable<string> propertyNames)
+        static IEnumerable<PSPropertyInfo> GetItemProperties(IProviderContext providerContext, IItemProvider thisPathValue, IEnumerable<string> propertyNames)
         {
             if (propertyNames is null)
             {
                 yield break;
             }
 
-            var thisItem = thisPathValue.GetItem();
+            var thisItem = thisPathValue.GetItem(providerContext);
             var propDescs = TypeDescriptor.GetProperties(thisItem);
             var props = (from PropertyDescriptor prop in propDescs
                          where (propertyNames.Contains(prop.Name, StringComparer.InvariantCultureIgnoreCase))
@@ -62,15 +63,15 @@ namespace CodeOwls.PowerShell.Paths
             };
         }
 
-        #endregion GetItemProperties default iomplementation
+        #endregion GetItemProperties default implementation
 
-        void SetItemProperties(IEnumerable<PSPropertyInfo> properties) => SetItemProperties(this, properties);
+        void SetItemProperties(IProviderContext providerContext, IEnumerable<PSPropertyInfo> properties) => SetItemProperties(providerContext, this, properties);
 
         #region SetItemProperties default implementation
 
-        static void SetItemProperties(IItemProvider thisPathValue, IEnumerable<PSPropertyInfo> properties)
+        static void SetItemProperties(IProviderContext providerContext, IItemProvider thisPathValue, IEnumerable<PSPropertyInfo> properties)
         {
-            var nodeItem = thisPathValue.GetItem();
+            var nodeItem = thisPathValue.GetItem(providerContext);
             var propDescs = TypeDescriptor.GetProperties(nodeItem);
             var props = (from PropertyDescriptor propDesc in propDescs
                          let psod = (from pso in properties
