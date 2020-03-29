@@ -30,7 +30,7 @@ namespace CodeOwls.PowerShell.Paths
 {
     public interface IRenameItem
     {
-        object RenameItemParameters => new RuntimeDefinedParameterDictionary();
+        object RenameItemParameters { get; }
 
         void RenameItem(IProviderContext providerContext, string path, string newName);
     }

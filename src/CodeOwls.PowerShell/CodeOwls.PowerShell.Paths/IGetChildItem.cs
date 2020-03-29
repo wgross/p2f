@@ -7,7 +7,7 @@ namespace CodeOwls.PowerShell.Paths
 {
     public interface IGetChildItem
     {
-        public object GetChildItemParameters => new RuntimeDefinedParameterDictionary();
+        object GetChildItemParameters { get; }
 
         IEnumerable<PathNode> GetChildNodes(IProviderContext providerContext);
     }

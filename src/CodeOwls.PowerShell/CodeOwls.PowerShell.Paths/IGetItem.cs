@@ -5,7 +5,7 @@ namespace CodeOwls.PowerShell.Paths
 {
     public interface IGetItem
     {
-        object GetItemParameters => new RuntimeDefinedParameterDictionary();
+        object GetItemParameters { get; }
 
         PSObject GetItem(IProviderContext providerContext);
     }

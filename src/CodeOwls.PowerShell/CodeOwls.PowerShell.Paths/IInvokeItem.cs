@@ -22,13 +22,12 @@
 
 using CodeOwls.PowerShell.Provider.PathNodeProcessors;
 using System.Collections.Generic;
-using System.Management.Automation;
 
 namespace CodeOwls.PowerShell.Paths
 {
-    public interface IInvokeItem
+	public interface IInvokeItem
     {
-        object InvokeItemParameters => new RuntimeDefinedParameterDictionary();
+        object InvokeItemParameters { get; }
 
         IEnumerable<object> InvokeItem(IProviderContext providerContext, string path);
     }

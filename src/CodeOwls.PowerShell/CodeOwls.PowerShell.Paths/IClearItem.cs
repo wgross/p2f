@@ -27,7 +27,7 @@ namespace CodeOwls.PowerShell.Paths
 {
     public interface IClearItem
     {
-        object ClearItemDynamicParamters => new RuntimeDefinedParameterDictionary();
+        object ClearItemDynamicParamters { get; }
 
         void ClearItem(IProviderContext providerContext, string path);
     }

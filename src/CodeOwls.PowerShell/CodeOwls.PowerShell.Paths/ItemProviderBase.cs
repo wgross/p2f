@@ -26,36 +26,36 @@ using System.Management.Automation;
 
 namespace CodeOwls.PowerShell.Paths
 {
-    public class ContainerItemProvider : ItemProviderBase
-    {
-        public ContainerItemProvider(object item, string name) : base(item, name, isContainer: true)
-        {
-        }
-    }
+    //public class ContainerItemProvider : ItemProviderBase
+    //{
+    //    public ContainerItemProvider(object item, string name) : base(item, name, isContainer: true)
+    //    {
+    //    }
+    //}
 
-    public class LeafItemProvider : ItemProviderBase
-    {
-        public LeafItemProvider(object item, string name) : base(item, name, isContainer: false)
-        {
-        }
-    }
+    //public class LeafItemProvider : ItemProviderBase
+    //{
+    //    public LeafItemProvider(object item, string name) : base(item, name, isContainer: false)
+    //    {
+    //    }
+    //}
 
-    public abstract class ItemProviderBase : IItemProvider
-    {
-        private readonly object item;
-        private readonly string name;
+    //public abstract class ItemProviderBase : IItemProvider
+    //{
+    //    private readonly object item;
+    //    private readonly string name;
 
-        public ItemProviderBase(object item, string name, bool isContainer)
-        {
-            this.item = item;
-            this.name = name;
-            this.IsContainer = isContainer;
-        }
+    //    public ItemProviderBase(object item, string name, bool isContainer)
+    //    {
+    //        this.item = item;
+    //        this.name = name;
+    //        this.IsContainer = isContainer;
+    //    }
 
-        public virtual PSObject GetItem(IProviderContext providerContext) => PSObject.AsPSObject(this.item);
+    //    public virtual PSObject GetItem(IProviderContext providerContext) => PSObject.AsPSObject(this.item);
 
-        public string Name => this.name.MakeSafeForPath();
+    //    public string Name => this.name.MakeSafeForPath();
 
-        public bool IsContainer { get; }
-    }
+    //    public bool IsContainer { get; }
+    //}
 }

@@ -7,7 +7,6 @@ namespace CodeOwls.PowerShell.Paths
     {
         void ClearContent(IProviderContext providerContext);
 
-        object ClearContentDynamicParameters(IProviderContext providerContext)
-            => new RuntimeDefinedParameterDictionary();
+        object ClearContentDynamicParameters(IProviderContext providerContext);
     }
 }

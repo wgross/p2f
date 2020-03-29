@@ -5,9 +5,9 @@ namespace CodeOwls.PowerShell.Paths
 {
     public interface ICopyItemPropertySource
     {
-        object CopyItemPropertyParameters => new RuntimeDefinedParameterDictionary();
+        object CopyItemPropertyParameters { get; }
 
-        IItemProvider GetItemProvider();
+        object GetItemProvider();
     }
 
     public interface ICopyItemPropertyDestination

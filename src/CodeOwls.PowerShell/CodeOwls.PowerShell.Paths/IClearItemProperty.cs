@@ -6,7 +6,7 @@ namespace CodeOwls.PowerShell.Paths
 {
     public interface IClearItemProperty
     {
-        object ClearItemPropertyParameters => new RuntimeDefinedParameterDictionary();
+        object ClearItemPropertyParameters { get; }
 
         void ClearItemProperty(IProviderContext providerContext, IEnumerable<string> propertyToClear);
     }

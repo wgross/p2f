@@ -66,19 +66,25 @@ namespace CodeOwls.PowerShell.Paths
             return (false, default);
         }
 
-        #region IGetChildNodes
+        #region IGetChildItem
+
+        public object GetChildItemParameters => new RuntimeDefinedParameterDictionary();
 
         public abstract IEnumerable<PathNode> GetChildNodes(IProviderContext providerContext);
 
-        #endregion IGetChildNodes
+        #endregion IGetChildItem
 
         #region IGetItem
+
+        public object GetItemParameters => new RuntimeDefinedParameterDictionary();
 
         public abstract PSObject GetItem(IProviderContext providerContext);
 
         #endregion IGetItem
 
         #region IGetItemProperties
+
+        public virtual object GetItemPropertyParameters => new RuntimeDefinedParameterDictionary();
 
         public IEnumerable<PSPropertyInfo> GetItemProperties(IProviderContext providerContext, IEnumerable<string> propertyNames)
         {

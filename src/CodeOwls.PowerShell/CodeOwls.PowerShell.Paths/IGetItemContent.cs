@@ -8,7 +8,6 @@ namespace CodeOwls.PowerShell.Paths
     {
         IContentReader GetContentReader(IProviderContext providerContext);
 
-        object GetContentReaderDynamicParameters(IProviderContext providerContext)
-            => new RuntimeDefinedParameterDictionary();
+        object GetContentReaderDynamicParameters(IProviderContext providerContext);
     }
 }

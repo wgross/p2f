@@ -22,15 +22,14 @@
 
 using CodeOwls.PowerShell.Provider.PathNodeProcessors;
 using System.Collections.Generic;
-using System.Management.Automation;
 
 namespace CodeOwls.PowerShell.Paths
 {
-    public interface INewItem
+	public interface INewItem
     {
         IEnumerable<string> NewItemTypeNames { get; }
 
-        object NewItemParameters => new RuntimeDefinedParameterDictionary();
+        object NewItemParameters { get; }
 
         PathNode NewItem(IProviderContext providerContext, string newItemChildPath, string itemTypeName, object newItemValue);
     }

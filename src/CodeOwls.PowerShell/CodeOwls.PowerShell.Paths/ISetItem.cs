@@ -21,13 +21,12 @@
 */
 
 using CodeOwls.PowerShell.Provider.PathNodeProcessors;
-using System.Management.Automation;
 
 namespace CodeOwls.PowerShell.Paths
 {
-    public interface ISetItem
+	public interface ISetItem
     {
-        object SetItemParameters => new RuntimeDefinedParameterDictionary();
+        object SetItemParameters { get; }
 
         void SetItem(IProviderContext providerContext, string path, object value);
     }

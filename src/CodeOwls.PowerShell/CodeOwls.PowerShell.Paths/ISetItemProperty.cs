@@ -6,7 +6,7 @@ namespace CodeOwls.PowerShell.Paths
 {
     public interface ISetItemProperty
     {
-        object SetItemPropertyParameters => new RuntimeDefinedParameterDictionary();
+        object SetItemPropertyParameters { get; }
 
         void SetItemProperties(IProviderContext providerContext, IEnumerable<PSPropertyInfo> properties);
     }
