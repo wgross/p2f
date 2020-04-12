@@ -23,6 +23,7 @@
 using CodeOwls.PowerShell.Provider.PathNodeProcessors;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Management.Automation;
 
@@ -88,10 +89,29 @@ namespace CodeOwls.PowerShell.Paths
 
         public IEnumerable<PSPropertyInfo> GetItemProperties(IProviderContext providerContext, IEnumerable<string> propertyNames)
         {
-            if (propertyNames.Any())
-                return this.GetItem(providerContext).Properties.Where(p => propertyNames.Contains(p.Name, StringComparer.OrdinalIgnoreCase));
+            return propertyNames.Any() ? selectProperties() : allProperties();
 
-            return this.GetItem(providerContext).Properties;
+            IEnumerable<PSPropertyInfo> allProperties() => this.GetItem(providerContext).Properties;
+
+            IEnumerable<PSPropertyInfo> selectProperties()
+            {
+                var all = allProperties().ToDictionary(p => p.Name, StringComparer.OrdinalIgnoreCase);
+                foreach (var propertyName in propertyNames)
+                {
+                    if (all.TryGetValue(propertyName, out var value))
+                        yield return value;
+                    else
+                    {
+                        // for unkown property display an error similar to what the
+                        // file system provider shows.
+                        providerContext.WriteError(new ErrorRecord(
+                            exception: new IOException($"The property {propertyName} does not exist or was not found."),
+                            errorId: "propertyUnknown",
+                            errorCategory: ErrorCategory.ReadError,
+                            targetObject: propertyName));
+                    }
+                }
+            }
         }
 
         #endregion IGetItemProperties

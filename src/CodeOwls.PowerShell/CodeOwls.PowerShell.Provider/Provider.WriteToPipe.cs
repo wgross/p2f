@@ -60,7 +60,10 @@ namespace CodeOwls.PowerShell.Provider
                     return pso;
                 });
 
-            return (true, psObject, pathNode.IsContainer);
+            // if no propertiees are extracted, dont give anything back.
+            return psObject.Properties.Any()
+                ? (true, psObject, pathNode.IsContainer)
+                : (false, null, pathNode.IsContainer);
         }
 
         #endregion Write a PathNode to the PowerShell default output as PSObject
